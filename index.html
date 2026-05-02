@@ -1,26 +1,2914 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="WhisperX Studio - production-ready AI workflow studio for transcription, analysis, and automation." />
-    <meta name="theme-color" content="#0b1020" />
-    <meta name="color-scheme" content="dark light" />
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhisperX Builder MAX v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   WHISPERX BUILDER MAX v2 — GLOBAL STYLES
+═══════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;font-size:13px;-webkit-font-smoothing:antialiased}
 
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="WhisperX Studio" />
-    <meta property="og:description" content="Production-ready AI workflow studio for transcription, analysis, and automation." />
+/* CSS Variables (theme-controlled) */
+:root{
+  --bg:#070c12;--bg2:#0e1520;--bg3:#131e2c;--hov:#192436;
+  --bdr:#1e3048;--bdr2:rgba(30,48,72,0.5);
+  --txt:#d8eaf8;--muted:#7a99b8;--dim:#3d5a7a;
+  --acc:#00d8ff;--pur:#7c4dff;--grn:#00e676;--red:#ff1744;--amb:#ffab00;
+  --font:'Outfit',sans-serif;
+}
+body{background:var(--bg);color:var(--txt)}
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="WhisperX Studio" />
-    <meta name="twitter:description" content="Production-ready AI workflow studio for transcription, analysis, and automation." />
+/* Scrollbars */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,216,255,0.15);border-radius:2px}
+.sh::-webkit-scrollbar{display:none}
 
-    <link rel="icon" href="/favicon.ico" />
-    <title>WhisperX Studio</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run WhisperX Studio.</noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+/* Layout */
+#app{display:flex;height:100vh;width:100vw;overflow:hidden;
+  background-image:linear-gradient(rgba(0,216,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,216,255,0.018) 1px,transparent 1px);
+  background-size:40px 40px}
+
+/* Sidebar */
+#sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;transition:width 0.2s;overflow:hidden}
+#sidebar.collapsed{width:52px}
+.sidebar-logo{padding:14px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--pur));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.logo-text{font-family:var(--font);font-weight:800;font-size:13px;
+  background:linear-gradient(135deg,var(--acc),var(--pur));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+
+.nav-section{padding:8px 8px 4px;font-size:9px;font-family:'Space Mono',monospace;
+  color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;transition:all 0.15s;margin:1px 6px;position:relative}
+.nav-item:hover{background:var(--hov);border-color:var(--bdr)}
+.nav-item.active{background:rgba(0,216,255,0.06);border-color:rgba(0,216,255,0.2)}
+.nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.nav-label{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden}
+.nav-item.active .nav-label{color:var(--acc)}
+.nav-badge{margin-left:auto;font-size:9px;font-family:'Space Mono',monospace;padding:1px 5px;
+  border-radius:999px;background:rgba(0,216,255,0.12);color:var(--acc);border:1px solid rgba(0,216,255,0.25);flex-shrink:0}
+
+/* Sidebar key zone */
+.sidebar-key{padding:10px;border-top:1px solid var(--bdr);flex-shrink:0}
+.key-status{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  background:var(--bg);border:1px solid var(--bdr);cursor:pointer}
+.key-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.key-dot.on{background:var(--grn);box-shadow:0 0 6px var(--grn)}
+.key-dot.off{background:var(--red)}
+.key-text{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;overflow:hidden}
+
+/* Main area */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:36px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--bdr);background:rgba(14,21,32,0.8);
+  backdrop-filter:blur(12px);flex-shrink:0}
+.topbar-title{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.live-dot{display:flex;align-items:center;gap:5px;font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)}
+.live-dot span{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:blink 2s infinite}
+
+#content{flex:1;overflow:hidden;position:relative}
+.module{display:none;height:100%;flex-direction:column;overflow:hidden}
+.module.active{display:flex}
+
+/* Cards / Panels */
+.panel{background:linear-gradient(145deg,var(--bg2),#0a1018);border:1px solid var(--bdr);border-radius:12px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)}
+.panel-s{background:rgba(14,21,32,0.6);border:1px solid var(--bdr2);border-radius:10px;backdrop-filter:blur(12px)}
+.panel-i{background:rgba(7,12,18,0.8);border:1px solid rgba(30,48,72,0.4);border-radius:8px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+  font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;font-family:'Inter',sans-serif;white-space:nowrap}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn-acc{background:var(--acc);color:#000}
+.btn-acc:hover:not(:disabled){background:#33e0ff;box-shadow:0 0 20px rgba(0,216,255,0.4)}
+.btn-pur{background:var(--pur);color:#fff}
+.btn-pur:hover:not(:disabled){background:#9c6dff;box-shadow:0 0 20px rgba(124,77,255,0.4)}
+.btn-gh{background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid var(--bdr)}
+.btn-gh:hover:not(:disabled){background:rgba(255,255,255,0.08);color:var(--txt)}
+.btn-rd{background:rgba(255,23,68,0.12);color:var(--red);border:1px solid rgba(255,23,68,0.25)}
+.btn-rd:hover:not(:disabled){background:rgba(255,23,68,0.22)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+
+/* Inputs */
+.inp{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:9px 13px;font-size:13px;color:var(--txt);outline:none;transition:border-color 0.2s;
+  font-family:'Inter',sans-serif}
+.inp:focus{border-color:rgba(0,216,255,0.5)}
+.inp::placeholder{color:var(--dim)}
+textarea.inp{resize:none}
+select.inp{cursor:pointer;background-image:none}
+select.inp option{background:var(--bg2)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;
+  font-size:9px;font-family:'Space Mono',monospace;font-weight:700;border:1px solid}
+.badge-a{color:var(--acc);background:rgba(0,216,255,0.08);border-color:rgba(0,216,255,0.25)}
+.badge-v{color:#c084fc;background:rgba(124,77,255,0.08);border-color:rgba(124,77,255,0.25)}
+.badge-g{color:var(--grn);background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.25)}
+.badge-w{color:var(--amb);background:rgba(255,171,0,0.08);border-color:rgba(255,171,0,0.25)}
+.badge-r{color:var(--red);background:rgba(255,23,68,0.08);border-color:rgba(255,23,68,0.25)}
+.thinking-badge{color:#a480ff;background:rgba(124,77,255,0.1);border:1px solid rgba(124,77,255,0.25);
+  display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:999px;font-size:9px;font-family:'Space Mono',monospace}
+
+/* Stage tracker */
+.stage-track{display:flex;align-items:flex-start;gap:0;width:100%;overflow-x:auto;padding:4px 0}
+.stage-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:56px;position:relative}
+.stage-node::before{content:"";position:absolute;top:6px;left:-50%;right:50%;height:2px;background:rgba(30,48,72,0.8);z-index:0}
+.stage-node:first-child::before{display:none}
+.stage-node.done::before{background:rgba(0,230,118,0.4)}
+.sn-dot{width:13px;height:13px;border-radius:50%;border:2px solid;z-index:1;position:relative;transition:all 0.4s}
+.sn-dot.idle{border-color:var(--dim);background:var(--bg)}
+.sn-dot.active{border-color:var(--acc);background:rgba(0,216,255,0.2);box-shadow:0 0 10px rgba(0,216,255,0.5);animation:blink 1s infinite}
+.sn-dot.done{border-color:var(--grn);background:rgba(0,230,118,0.2)}
+.sn-dot.error{border-color:var(--red);background:rgba(255,23,68,0.2)}
+.sn-lbl{font-size:8px;font-family:'Space Mono',monospace;color:var(--dim);text-transform:uppercase;text-align:center}
+
+/* List items */
+.li{padding:9px 11px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.li:hover{background:var(--hov);border-color:var(--bdr)}
+.li.active{background:rgba(0,216,255,0.06);border-color:rgba(0,216,255,0.2)}
+
+/* Code block */
+.code{font-family:'Space Mono',monospace;font-size:10px;background:rgba(0,0,0,0.4);
+  border:1px solid var(--bdr);border-radius:8px;padding:14px;overflow-x:auto;
+  color:#7dd3fc;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+
+/* Agent cards */
+.agent-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;
+  font-size:10px;font-family:'Space Mono',monospace;border:1px solid var(--bdr);
+  background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.agent-chip:hover{background:rgba(255,255,255,0.07)}
+.agent-chip.active{border-color:rgba(0,216,255,0.4);background:rgba(0,216,255,0.07)}
+.agent-dot{width:5px;height:5px;border-radius:50%}
+
+/* Chat bubbles */
+.msg-user{background:var(--pur);color:#fff;border-radius:18px 18px 4px 18px;padding:11px 15px;
+  font-size:13px;line-height:1.6;max-width:75%;word-break:break-word;white-space:pre-wrap}
+.msg-ai{background:var(--bg2);border:1px solid var(--bdr);border-radius:18px 18px 18px 4px;padding:11px 15px;
+  font-size:13px;line-height:1.6;max-width:75%;word-break:break-word;white-space:pre-wrap;color:var(--txt)}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block}
+
+/* Module header */
+.mod-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;
+  border-bottom:1px solid var(--bdr);flex-shrink:0}
+.mod-title{font-family:var(--font);font-weight:700;font-size:14px}
+.mod-sub{font-size:9px;font-family:'Space Mono',monospace;color:var(--dim);margin-top:2px}
+
+/* Switch toggle */
+.sw{width:36px;height:20px;border-radius:999px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.sw-on{background:var(--pur)}
+.sw-off{background:var(--bdr)}
+.sw-knob{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left 0.2s}
+.sw-on .sw-knob{left:18px}
+.sw-off .sw-knob{left:2px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;
+  align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;padding:24px;
+  width:90%;max-width:440px;box-shadow:0 24px 80px rgba(0,0,0,0.7)}
+.modal-title{font-family:var(--font);font-weight:700;font-size:16px;margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:16px}
+
+/* Animations */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.spin{display:inline-block;animation:spin 0.7s linear infinite}
+.fade-in{animation:fadeIn 0.2s ease}
+.float{animation:float 3s ease-in-out infinite}
+
+/* Whiteboard canvas */
+#wb-canvas{cursor:crosshair;display:block;width:100%;height:100%}
+
+/* Mermaid preview */
+#mm-preview svg{max-width:100%}
+
+/* Drag handles for kanban */
+.task-card{padding:10px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--bdr);
+  margin-bottom:8px;cursor:grab;transition:all 0.15s}
+.task-card:hover{border-color:rgba(0,216,255,0.3)}
+.task-card.dragging{opacity:0.5;cursor:grabbing}
+.kanban-col{flex:1;min-width:0;display:flex;flex-direction:column}
+.kanban-drop-zone{flex:1;min-height:80px;border-radius:8px;border:2px dashed transparent;
+  transition:all 0.2s;padding:4px}
+.kanban-drop-zone.drag-over{border-color:rgba(0,216,255,0.4);background:rgba(0,216,255,0.04)}
+
+/* Resize handle */
+.resize-h{width:1px;cursor:col-resize;background:var(--bdr);flex-shrink:0;transition:background 0.2s}
+.resize-h:hover,.resize-h.dragging{background:var(--acc)}
+
+/* Empty states */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  height:100%;color:var(--muted);text-align:center;padding:40px}
+.empty-icon{font-size:40px;opacity:0.15}
+.empty-text{font-size:13px}
+.empty-sub{font-size:10px;font-family:'Space Mono',monospace;color:var(--dim)}
+
+/* Thinking block */
+.thinking-block{background:rgba(124,77,255,0.07);border:1px solid rgba(124,77,255,0.2);
+  border-radius:8px;padding:10px 12px;font-size:10px;font-family:'Space Mono',monospace;
+  color:rgba(164,128,255,0.7);max-height:100px;overflow:hidden;white-space:pre-wrap}
+
+/* Vision pipeline image */
+.vision-img{width:100%;border-radius:8px;border:1px solid var(--bdr);object-fit:cover}
+
+/* Gallery grid */
+.gallery-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:14px;
+  transition:all 0.15s;cursor:default}
+.gallery-card:hover{border-color:rgba(0,216,255,0.25)}
+
+/* Charts canvas */
+.chart-wrap{position:relative;width:100%;height:100%}
+
+/* Theme swatches */
+.theme-swatch{border-radius:10px;padding:12px;cursor:pointer;border:2px solid transparent;
+  transition:all 0.2s;background:var(--bg);text-align:left}
+.theme-swatch.sel{border-color:var(--acc);background:rgba(0,216,255,0.05)}
+.theme-swatch:hover:not(.sel){border-color:var(--bdr)}
+.swatch-dot{width:16px;height:16px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle}
+
+/* Skill forge */
+.test-pass{color:var(--grn)}
+.test-fail{color:var(--red)}
+.skill-status{padding:2px 8px;border-radius:999px;font-size:9px;font-family:'Space Mono',monospace}
+.skill-status.draft{background:rgba(122,153,184,0.1);color:var(--muted)}
+.skill-status.ready{background:rgba(0,230,118,0.1);color:var(--grn)}
+.skill-status.packaged{background:rgba(0,216,255,0.1);color:var(--acc)}
+
+/* Scrollable content areas */
+.scroll-y{overflow-y:auto}
+.scroll-x{overflow-x:auto}
+
+/* Helper */
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}
+.justify-between{justify-content:space-between}.justify-center{justify-content:center}
+.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}.flex-1{flex:1}.flex-shrink-0{flex-shrink:0}
+.w-full{width:100%}.h-full{height:100%}.overflow-hidden{overflow:hidden}
+.p-3{padding:12px}.p-4{padding:16px}.p-5{padding:20px}
+.mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mt-4{margin-top:16px}
+.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}
+.text-xs{font-size:11px}.text-sm{font-size:12px}.text-base{font-size:13px}
+.font-mono{font-family:'Space Mono',monospace}.font-bold{font-weight:700}.font-medium{font-weight:500}
+.text-muted{color:var(--muted)}.text-dim{color:var(--dim)}.text-acc{color:var(--acc)}
+.text-grn{color:var(--grn)}.text-red{color:var(--red)}.text-amb{color:var(--amb)}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nowrap{white-space:nowrap}.wrap{flex-wrap:wrap}
+.border-b{border-bottom:1px solid var(--bdr)}.border-r{border-right:1px solid var(--bdr)}
+.border-l{border-left:1px solid var(--bdr)}.border-t{border-top:1px solid var(--bdr)}
+.rounded{border-radius:8px}.rounded-lg{border-radius:10px}.rounded-xl{border-radius:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.label{font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px}
+.section{margin-bottom:16px}
+.hidden{display:none!important}
+.ml-auto{margin-left:auto}
+.opacity-50{opacity:0.5}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">⚡</div>
+    <div>
+      <div class="logo-text">WhisperX</div>
+      <div style="font-size:8px;font-family:'Space Mono',monospace;color:var(--dim)">BUILDER MAX v2</div>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto" class="sh">
+    <div class="nav-section">AI Agents</div>
+    <div class="nav-item active" onclick="switchModule('ghost-team')">
+      <div class="nav-icon">👻</div>
+      <div class="nav-label">Ghost Team</div>
+      <div class="nav-badge">9</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('vision-pipeline')">
+      <div class="nav-icon">👁</div>
+      <div class="nav-label">Vision Pipeline</div>
+      <div class="nav-badge">7</div>
+    </div>
+
+    <div class="nav-section">Build Tools</div>
+    <div class="nav-item" onclick="switchModule('builder')">
+      <div class="nav-icon">🔨</div>
+      <div class="nav-label">Builder Studio</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('skill-forge')">
+      <div class="nav-icon">⚗️</div>
+      <div class="nav-label">Skill Forge</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('doc-atelier')">
+      <div class="nav-icon">📝</div>
+      <div class="nav-label">Doc Atelier</div>
+    </div>
+
+    <div class="nav-section">Visual</div>
+    <div class="nav-item" onclick="switchModule('canvas')">
+      <div class="nav-icon">🔮</div>
+      <div class="nav-label">Canvas Studio</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('mermaid')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Mermaid</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('whiteboard')">
+      <div class="nav-icon">🎨</div>
+      <div class="nav-label">Whiteboard</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('presentation')">
+      <div class="nav-icon">📑</div>
+      <div class="nav-label">Presentation</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('charts')">
+      <div class="nav-icon">📈</div>
+      <div class="nav-label">Charts</div>
+    </div>
+
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item" onclick="switchModule('tasks')">
+      <div class="nav-icon">✅</div>
+      <div class="nav-label">Tasks</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('gallery')">
+      <div class="nav-icon">🖼</div>
+      <div class="nav-label">Gallery</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('github')">
+      <div class="nav-icon">🐙</div>
+      <div class="nav-label">GitHub AI</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('theme-lab')">
+      <div class="nav-icon">🎭</div>
+      <div class="nav-label">Theme Lab</div>
+    </div>
+    <div class="nav-item" onclick="switchModule('settings')">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">Settings</div>
+    </div>
+  </div>
+
+  <div class="sidebar-key">
+    <div class="key-status" onclick="openKeyModal()">
+      <div class="key-dot off" id="keyDot"></div>
+      <div class="key-text" id="keyText">Click to add API key</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Ghost Team — 9-Agent AI Chat</div>
+    <div class="topbar-right">
+      <div class="live-dot" id="liveStatus">
+        <span id="liveDot" style="background:var(--red)"></span>
+        <span id="liveText">NOT CONNECTED</span>
+      </div>
+      <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">WXBMAX v2.0</div>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- ══════════════ MODULE: GHOST TEAM ══════════════ -->
+    <div class="module active" id="mod-ghost-team">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">👻 Ghost Team</div>
+          <div class="mod-sub">9 Agents · Gemini AI · Thinking Mode</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-gh btn-sm" id="gt-thinking-toggle" onclick="toggleThinking()">⚡ Thinking: OFF</button>
+          <button class="btn btn-gh btn-sm" onclick="clearChat()">🗑 Clear</button>
+          <button class="btn btn-gh btn-sm" onclick="exportChat()">⬇ Export</button>
+        </div>
+      </div>
+
+      <!-- Agent selector -->
+      <div class="flex gap-2 sh" style="padding:10px 20px;border-bottom:1px solid var(--bdr);overflow-x:auto;flex-shrink:0" id="agentBar"></div>
+
+      <!-- Messages -->
+      <div class="flex-1 scroll-y sh" id="chatMessages" style="padding:20px;display:flex;flex-direction:column;gap:16px">
+        <div class="empty">
+          <div class="empty-icon float">👻</div>
+          <div class="empty-text">Ghost Team standing by.</div>
+          <div class="empty-sub">Select an agent and send your first message.</div>
+        </div>
+      </div>
+
+      <!-- Thinking display -->
+      <div id="thinkingDisplay" class="hidden" style="padding:0 20px 8px">
+        <div class="thinking-block" id="thinkingContent"></div>
+      </div>
+
+      <!-- Input -->
+      <div style="padding:14px 20px;border-top:1px solid var(--bdr);flex-shrink:0">
+        <div class="flex gap-2 items-center">
+          <textarea id="chatInput" class="inp" rows="2" placeholder="Message active agent… (Enter to send, Shift+Enter newline)"
+            style="resize:none;max-height:120px;overflow-y:auto" onkeydown="handleChatKey(event)"></textarea>
+          <button class="btn btn-acc" onclick="sendChat()" id="sendBtn" style="flex-shrink:0;align-self:flex-end;height:40px">
+            <span>Send</span>
+          </button>
+        </div>
+        <div class="flex justify-between mt-2" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">
+          <span id="gt-msgcount">0 messages</span>
+          <span id="gt-thinking-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: VISION PIPELINE ══════════════ -->
+    <div class="module" id="mod-vision-pipeline">
+      <div class="flex h-full overflow-hidden">
+        <!-- Session list -->
+        <div style="width:200px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column">
+          <div class="flex items-center justify-between p-3 border-b">
+            <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Sessions</span>
+            <button class="btn btn-gh btn-xs" onclick="vpUploadNew()">+ Upload</button>
+          </div>
+          <div class="flex-1 scroll-y sh p-2" id="vpSessionList" style="gap:4px;display:flex;flex-direction:column">
+            <div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">Drop an image or upload</div>
+          </div>
+          <input type="file" id="vpFileInput" accept="image/*" class="hidden" onchange="vpOnFile(event)">
+        </div>
+
+        <!-- Main vision area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <!-- Header -->
+          <div class="mod-hdr flex-shrink-0">
+            <div>
+              <div class="mod-title">👁 Vision Pipeline</div>
+              <div class="mod-sub">7-Stage Screenshot → Code</div>
+            </div>
+            <button class="btn btn-acc" id="vpRunBtn" onclick="vpRunPipeline()" disabled>▶ Run Pipeline</button>
+          </div>
+
+          <!-- Stage track -->
+          <div style="padding:12px 20px;border-bottom:1px solid var(--bdr);flex-shrink:0">
+            <div class="stage-track" id="vpStageTrack"></div>
+          </div>
+
+          <div class="flex flex-1 overflow-hidden">
+            <!-- Image + context -->
+            <div style="width:220px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column;padding:14px;gap:12px"
+              id="vpImagePane"
+              ondrop="vpOnDrop(event)" ondragover="event.preventDefault()">
+              <div id="vpImageWrap" style="border:2px dashed var(--bdr);border-radius:10px;min-height:140px;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;cursor:pointer" onclick="document.getElementById('vpFileInput').click()">
+                Drop image here
+              </div>
+              <div>
+                <div class="label">Context</div>
+                <textarea class="inp" id="vpContext" rows="4" placeholder="Describe the app, stack, users…"></textarea>
+              </div>
+            </div>
+
+            <!-- Stage output -->
+            <div class="flex-1 scroll-y sh p-5" id="vpOutputPane">
+              <div class="empty">
+                <div class="empty-icon">👁</div>
+                <div class="empty-text">Select a stage to view output</div>
+                <div class="empty-sub">Click a stage node above after running the pipeline.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: BUILDER STUDIO ══════════════ -->
+    <div class="module" id="mod-builder">
+      <div class="flex h-full overflow-hidden">
+        <!-- Lockspec list -->
+        <div style="width:200px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column">
+          <div class="flex items-center justify-between p-3 border-b">
+            <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Lockspecs</span>
+            <button class="btn btn-gh btn-xs" onclick="bsNewLockspec()">+</button>
+          </div>
+          <div class="flex-1 scroll-y sh p-2" id="bsLockspecList" style="display:flex;flex-direction:column;gap:4px">
+            <div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No lockspecs yet</div>
+          </div>
+        </div>
+
+        <!-- Builder main -->
+        <div class="flex-1 flex overflow-hidden">
+          <!-- Editor -->
+          <div class="flex-1 scroll-y sh p-5 flex flex-col gap-4" id="bsEditor">
+            <div class="empty">
+              <div class="empty-icon">🔨</div>
+              <div class="empty-text">Create a lockspec to start building</div>
+              <button class="btn btn-acc mt-3" onclick="bsNewLockspec()">New Lockspec</button>
+            </div>
+          </div>
+
+          <!-- Build log -->
+          <div style="width:260px;flex-shrink:0;border-left:1px solid var(--bdr);display:flex;flex-direction:column">
+            <div class="p-3 border-b">
+              <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Build Log</span>
+            </div>
+            <div class="flex-1 scroll-y sh p-3" id="bsLog" style="display:flex;flex-direction:column;gap:2px">
+              <div style="font-size:10px;font-style:italic;color:var(--dim);text-align:center;padding:20px">No build activity</div>
+            </div>
+            <div id="bsPreview" class="hidden" style="border-top:1px solid var(--bdr);padding:12px">
+              <div class="label" style="color:var(--grn);margin-bottom:6px">PS1 Preview</div>
+              <div class="code" style="max-height:120px;font-size:9px" id="bsPreviewCode"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: SKILL FORGE ══════════════ -->
+    <div class="module" id="mod-skill-forge">
+      <div class="flex h-full overflow-hidden">
+        <!-- Skill list -->
+        <div style="width:200px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column">
+          <div class="flex items-center justify-between p-3 border-b">
+            <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase">Skills</span>
+            <button class="btn btn-gh btn-xs" onclick="sfNew()">+</button>
+          </div>
+          <div class="flex-1 scroll-y sh p-2" id="sfList" style="display:flex;flex-direction:column;gap:4px">
+            <div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No skills yet</div>
+          </div>
+        </div>
+
+        <!-- Skill editor -->
+        <div class="flex-1 scroll-y sh p-5" id="sfEditor">
+          <div class="empty">
+            <div class="empty-icon">⚗️</div>
+            <div class="empty-text">Create a skill to start</div>
+            <button class="btn btn-acc mt-3" onclick="sfNew()">New Skill</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: DOC ATELIER ══════════════ -->
+    <div class="module" id="mod-doc-atelier">
+      <div class="flex h-full overflow-hidden">
+        <!-- Doc list -->
+        <div style="width:200px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column">
+          <div class="flex items-center justify-between p-3 border-b">
+            <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase">Docs</span>
+            <button class="btn btn-gh btn-xs" onclick="daNew()">+</button>
+          </div>
+          <div class="flex-1 scroll-y sh p-2" id="daList" style="display:flex;flex-direction:column;gap:4px">
+            <div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No docs yet</div>
+          </div>
+        </div>
+
+        <!-- Doc editor -->
+        <div class="flex-1 flex flex-col overflow-hidden" id="daEditor">
+          <div class="empty">
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">Create a doc to start</div>
+            <button class="btn btn-acc mt-3" onclick="daNew()">New Doc</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: CANVAS STUDIO ══════════════ -->
+    <div class="module" id="mod-canvas">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0;flex-wrap:wrap">
+        <span class="mod-title" style="font-size:13px">🔮 Canvas Studio</span>
+        <input class="inp" id="cvPrompt" placeholder="Describe a flowchart…" style="flex:1;min-width:160px;max-width:280px">
+        <button class="btn btn-acc btn-sm" onclick="cvGenerate()">✨ AI Generate</button>
+        <button class="btn btn-gh btn-sm" onclick="cvAddNode()">+ Node</button>
+        <button class="btn btn-gh btn-sm" id="cvLinkBtn" onclick="cvToggleLink()">🔗 Link</button>
+        <button class="btn btn-rd btn-sm" onclick="cvDeleteSelected()">✕ Delete</button>
+        <button class="btn btn-gh btn-sm" onclick="cvExport()">⬇ JSON</button>
+        <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">Drag nodes · Shift+click to delete</span>
+      </div>
+      <div style="flex:1;position:relative;overflow:hidden">
+        <svg id="cvSvg" style="position:absolute;inset:0;width:100%;height:100%;background:var(--bg);cursor:default;
+          background-image:linear-gradient(rgba(0,216,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,216,255,0.02) 1px,transparent 1px);
+          background-size:40px 40px"></svg>
+        <!-- Properties panel -->
+        <div id="cvProps" class="hidden" style="position:absolute;right:0;top:0;bottom:0;width:180px;
+          background:var(--bg2);border-left:1px solid var(--bdr);padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div class="label">Properties</div>
+          <div>
+            <div class="label">Label</div>
+            <input class="inp" id="cvPropLabel" oninput="cvUpdateSelectedLabel(this.value)">
+          </div>
+          <div>
+            <div class="label">Type</div>
+            <select class="inp" id="cvPropType" onchange="cvUpdateSelectedType(this.value)">
+              <option value="default">Default</option>
+              <option value="start">Start</option>
+              <option value="end">End</option>
+              <option value="decision">Decision</option>
+            </select>
+          </div>
+          <button class="btn btn-rd btn-sm w-full" onclick="cvDeleteSelected()">✕ Delete Node</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: MERMAID ══════════════ -->
+    <div class="module" id="mod-mermaid">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">📊 Mermaid Editor</div>
+          <div class="mod-sub">AI diagram generator · Live preview</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-gh btn-sm" onclick="mmRender()">🔄 Render</button>
+          <button class="btn btn-gh btn-sm" onclick="mmDownload()">⬇ .mmd</button>
+        </div>
+      </div>
+      <!-- Quick templates -->
+      <div class="flex gap-2 sh" style="padding:8px 16px;border-bottom:1px solid var(--bdr);overflow-x:auto;flex-shrink:0;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--dim);align-self:center">Templates:</span>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('flowchart')">Flowchart</button>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('sequence')">Sequence</button>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('class')">Class</button>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('er')">ER</button>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('gantt')">Gantt</button>
+        <button class="btn btn-gh btn-xs" onclick="mmTemplate('pie')">Pie</button>
+      </div>
+      <!-- AI prompt -->
+      <div class="flex gap-2" style="padding:8px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0">
+        <input class="inp" id="mmPrompt" placeholder="Describe a diagram… press Enter to AI-generate" onkeydown="if(event.key==='Enter')mmAiGenerate()">
+        <button class="btn btn-acc btn-sm" onclick="mmAiGenerate()" id="mmAiBtn">✨</button>
+      </div>
+      <!-- Split editor / preview -->
+      <div class="flex flex-1 overflow-hidden">
+        <div class="flex-1 flex flex-col border-r" style="border-color:var(--bdr)">
+          <div style="padding:6px 14px;font-size:8px;font-family:'Space Mono',monospace;color:var(--dim);border-bottom:1px solid var(--bdr);text-transform:uppercase">Source</div>
+          <textarea id="mmCode" class="flex-1 scroll-y sh" style="background:var(--bg);padding:14px;font-family:'Space Mono',monospace;font-size:11px;color:#7dd3fc;border:none;outline:none;resize:none;line-height:1.7" spellcheck="false" oninput="mmScheduleRender()">graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Process A]
+    B -->|No| D[Process B]
+    C --> E[End]
+    D --> E</textarea>
+          <div id="mmError" class="hidden" style="padding:8px 14px;background:rgba(255,23,68,0.08);border-top:1px solid rgba(255,23,68,0.2);font-size:10px;color:var(--red);font-family:'Space Mono',monospace"></div>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <div style="padding:6px 14px;font-size:8px;font-family:'Space Mono',monospace;color:var(--dim);border-bottom:1px solid var(--bdr);text-transform:uppercase">Preview</div>
+          <div id="mmPreview" class="flex-1 scroll-y sh p-5" style="display:flex;align-items:center;justify-content:center;background:var(--bg)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: WHITEBOARD ══════════════ -->
+    <div class="module" id="mod-whiteboard">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0;flex-wrap:wrap">
+        <span class="mod-title" style="font-size:13px">🎨 Whiteboard</span>
+        <!-- Tools -->
+        <div class="flex gap-1" id="wbTools"></div>
+        <div style="width:1px;height:20px;background:var(--bdr)"></div>
+        <!-- Colors -->
+        <div class="flex gap-1" id="wbColors"></div>
+        <div style="width:1px;height:20px;background:var(--bdr)"></div>
+        <input type="range" id="wbSize" min="1" max="20" value="3" style="width:80px;accent-color:var(--acc)">
+        <span id="wbSizeLabel" style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)">3px</span>
+        <div class="ml-auto flex gap-2">
+          <button class="btn btn-gh btn-sm" onclick="wbUndo()">↩ Undo</button>
+          <button class="btn btn-rd btn-sm" onclick="wbClear()">🗑 Clear</button>
+          <button class="btn btn-gh btn-sm" onclick="wbSave()">⬇ PNG</button>
+        </div>
+      </div>
+      <div style="flex:1;position:relative;overflow:hidden">
+        <canvas id="wb-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: PRESENTATION ══════════════ -->
+    <div class="module" id="mod-presentation">
+      <div class="flex h-full overflow-hidden">
+        <!-- Slide list -->
+        <div style="width:180px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column">
+          <div class="flex items-center justify-between p-3 border-b">
+            <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase">Slides</span>
+            <button class="btn btn-gh btn-xs" onclick="presAddSlide()">+</button>
+          </div>
+          <div class="flex-1 scroll-y sh p-2" id="presSlideList" style="display:flex;flex-direction:column;gap:4px"></div>
+        </div>
+
+        <!-- Slide editor -->
+        <div class="flex-1 flex flex-col overflow-hidden" id="presMain">
+          <div class="mod-hdr flex-shrink-0">
+            <div>
+              <div class="mod-title">📑 Presentation</div>
+              <div class="mod-sub">AI slide generator</div>
+            </div>
+            <div class="flex gap-2">
+              <input class="inp" id="presAiPrompt" placeholder="AI: describe deck…" style="width:200px">
+              <button class="btn btn-acc btn-sm" onclick="presAiGenerate()" id="presAiBtn">✨ Generate Deck</button>
+              <button class="btn btn-gh btn-sm" onclick="presPresent()">▶ Present</button>
+            </div>
+          </div>
+          <div class="flex flex-1 overflow-hidden">
+            <!-- Slide preview -->
+            <div class="flex-1 p-5 flex items-center justify-center" id="presPreviewWrap">
+              <div id="presSlidePreview" style="width:100%;max-width:640px;aspect-ratio:16/9;border-radius:12px;padding:40px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--bdr);position:relative">
+                <div style="font-family:var(--font);font-size:28px;font-weight:800;margin-bottom:16px" id="presSlideTitle">New Presentation</div>
+                <div style="font-size:14px;line-height:1.7;color:var(--muted)" id="presSlideBody">Add slides to get started…</div>
+              </div>
+            </div>
+            <!-- Slide editor form -->
+            <div style="width:260px;flex-shrink:0;border-left:1px solid var(--bdr);padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto" class="sh">
+              <div>
+                <div class="label">Title</div>
+                <input class="inp" id="presTitle" oninput="presUpdateSlide()" placeholder="Slide title">
+              </div>
+              <div>
+                <div class="label">Content</div>
+                <textarea class="inp" id="presBody" rows="8" oninput="presUpdateSlide()" placeholder="Slide content…"></textarea>
+              </div>
+              <div>
+                <div class="label">Notes</div>
+                <textarea class="inp" id="presNotes" rows="3" oninput="presUpdateSlide()" placeholder="Speaker notes…"></textarea>
+              </div>
+              <div>
+                <div class="label">Theme</div>
+                <select class="inp" id="presTheme" onchange="presUpdateSlide()">
+                  <option value="0">Dark Blue</option>
+                  <option value="1">Deep Purple</option>
+                  <option value="2">Dark Red</option>
+                  <option value="3">Forest</option>
+                  <option value="4">Gold</option>
+                </select>
+              </div>
+              <button class="btn btn-rd btn-sm" onclick="presDeleteSlide()">✕ Delete Slide</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: CHARTS ══════════════ -->
+    <div class="module" id="mod-charts">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">📈 Charts</div>
+          <div class="mod-sub">AI-powered data visualizer</div>
+        </div>
+        <div class="flex gap-2">
+          <select class="inp" id="chartType" style="width:130px" onchange="chartRender()">
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="pie">Pie</option>
+            <option value="doughnut">Doughnut</option>
+            <option value="radar">Radar</option>
+          </select>
+          <button class="btn btn-acc btn-sm" onclick="chartAiGenerate()" id="chartAiBtn">✨ AI Data</button>
+        </div>
+      </div>
+      <div class="flex h-full overflow-hidden" style="flex:1">
+        <div style="width:260px;flex-shrink:0;border-right:1px solid var(--bdr);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px" class="sh">
+          <div>
+            <div class="label">AI Prompt</div>
+            <textarea class="inp" id="chartPrompt" rows="3" placeholder="Describe data to visualize…"></textarea>
+          </div>
+          <div>
+            <div class="label">Labels (comma-separated)</div>
+            <input class="inp" id="chartLabels" value="Jan,Feb,Mar,Apr,May,Jun" oninput="chartRender()">
+          </div>
+          <div id="chartDatasetsUI">
+            <div class="flex items-center justify-between mb-2">
+              <div class="label" style="margin:0">Datasets</div>
+              <button class="btn btn-gh btn-xs" onclick="chartAddDataset()">+</button>
+            </div>
+            <div id="chartDatasetList"></div>
+          </div>
+        </div>
+        <div class="flex-1 p-5 flex items-center justify-center" style="background:var(--bg)">
+          <div style="width:100%;max-width:600px;max-height:400px;position:relative">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: TASKS ══════════════ -->
+    <div class="module" id="mod-tasks">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">✅ Tasks</div>
+          <div class="mod-sub">Kanban board</div>
+        </div>
+        <button class="btn btn-acc btn-sm" onclick="taskNew()">+ New Task</button>
+      </div>
+      <div class="flex h-full overflow-hidden p-4 gap-4" style="flex:1;align-items:flex-start">
+        <!-- Columns built by JS -->
+        <div class="kanban-col" id="col-todo">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">To Do</div>
+          <div class="kanban-drop-zone scroll-y sh" id="drop-todo" ondragover="taskDragOver(event,'todo')" ondrop="taskDrop(event,'todo')" ondragleave="taskDragLeave(event)"></div>
+          <button class="btn btn-gh btn-xs w-full mt-2" onclick="taskNew('todo')">+ Add</button>
+        </div>
+        <div class="kanban-col" id="col-inprogress">
+          <div style="font-size:11px;font-weight:600;color:var(--acc);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">In Progress</div>
+          <div class="kanban-drop-zone scroll-y sh" id="drop-inprogress" ondragover="taskDragOver(event,'inprogress')" ondrop="taskDrop(event,'inprogress')" ondragleave="taskDragLeave(event)"></div>
+          <button class="btn btn-gh btn-xs w-full mt-2" onclick="taskNew('inprogress')">+ Add</button>
+        </div>
+        <div class="kanban-col" id="col-review">
+          <div style="font-size:11px;font-weight:600;color:var(--amb);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Review</div>
+          <div class="kanban-drop-zone scroll-y sh" id="drop-review" ondragover="taskDragOver(event,'review')" ondrop="taskDrop(event,'review')" ondragleave="taskDragLeave(event)"></div>
+          <button class="btn btn-gh btn-xs w-full mt-2" onclick="taskNew('review')">+ Add</button>
+        </div>
+        <div class="kanban-col" id="col-done">
+          <div style="font-size:11px;font-weight:600;color:var(--grn);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Done</div>
+          <div class="kanban-drop-zone scroll-y sh" id="drop-done" ondragover="taskDragOver(event,'done')" ondrop="taskDrop(event,'done')" ondragleave="taskDragLeave(event)"></div>
+          <button class="btn btn-gh btn-xs w-full mt-2" onclick="taskNew('done')">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: GALLERY ══════════════ -->
+    <div class="module" id="mod-gallery">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">🖼 Gallery</div>
+          <div class="mod-sub">Prompt &amp; output store</div>
+        </div>
+        <div class="flex gap-2">
+          <input class="inp" id="gallerySearch" placeholder="Search…" style="width:200px" oninput="galleryRender()">
+          <button class="btn btn-acc btn-sm" onclick="galleryNew()">+ Add Item</button>
+          <button class="btn btn-gh btn-sm" onclick="galleryExport()">⬇ JSON</button>
+        </div>
+      </div>
+      <div class="flex-1 scroll-y sh p-5" id="galleryGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-content:start"></div>
+    </div>
+
+    <!-- ══════════════ MODULE: GITHUB AI ══════════════ -->
+    <div class="module" id="mod-github">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">🐙 GitHub AI</div>
+          <div class="mod-sub">Repo explorer · AI code review</div>
+        </div>
+        <div class="flex gap-2">
+          <input class="inp" id="ghToken" type="password" placeholder="GitHub Token (optional)" style="width:180px">
+        </div>
+      </div>
+      <div class="flex flex-1 overflow-hidden">
+        <div style="width:320px;flex-shrink:0;border-right:1px solid var(--bdr);display:flex;flex-direction:column;padding:16px;gap:12px;overflow-y:auto" class="sh">
+          <div>
+            <div class="label">Repository</div>
+            <div class="flex gap-2">
+              <input class="inp" id="ghRepo" placeholder="owner/repo" style="flex:1">
+              <button class="btn btn-gh btn-sm" onclick="ghFetch()">Fetch</button>
+            </div>
+          </div>
+          <div id="ghInfo"></div>
+          <div>
+            <div class="label">Code / PR to Review</div>
+            <textarea class="inp" id="ghCode" rows="10" placeholder="Paste code or PR description…"></textarea>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-acc btn-sm" onclick="ghReview('review')">🔍 Review</button>
+            <button class="btn btn-gh btn-sm" onclick="ghReview('security')">🛡 Security</button>
+            <button class="btn btn-gh btn-sm" onclick="ghReview('optimize')">⚡ Optimize</button>
+          </div>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <div style="padding:6px 14px;font-size:8px;font-family:'Space Mono',monospace;color:var(--dim);border-bottom:1px solid var(--bdr);text-transform:uppercase">AI Output</div>
+          <div class="flex-1 scroll-y sh p-5">
+            <div class="code" id="ghResult" style="min-height:200px">AI review output will appear here…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: THEME LAB ══════════════ -->
+    <div class="module" id="mod-theme-lab">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">🎭 Theme Lab</div>
+          <div class="mod-sub">10 production themes</div>
+        </div>
+      </div>
+      <div class="flex-1 scroll-y sh p-5">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px" id="themeGrid"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MODULE: SETTINGS ══════════════ -->
+    <div class="module" id="mod-settings">
+      <div class="mod-hdr flex-shrink-0">
+        <div>
+          <div class="mod-title">⚙️ Settings</div>
+          <div class="mod-sub">WhisperX Builder MAX v2.0</div>
+        </div>
+      </div>
+      <div class="flex-1 scroll-y sh p-6" style="max-width:640px;margin:0 auto">
+        <!-- API Key -->
+        <div class="panel p-4 mb-4">
+          <div class="flex items-center gap-2 mb-3 pb-3 border-b">
+            <span>🔑</span><span class="font-bold text-sm">Gemini AI</span>
+          </div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div style="font-size:12px;font-weight:500">API Key</div>
+              <div id="settingsKeyDisplay" style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)">Not set</div>
+            </div>
+            <button class="btn btn-gh btn-sm" onclick="openKeyModal()">Configure</button>
+          </div>
+          <div class="mb-3">
+            <div class="label">Default Model</div>
+            <select class="inp" id="settingsModel" onchange="S.geminiModel=this.value;saveState()"></select>
+          </div>
+          <div class="panel-s p-3">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <div style="font-size:12px;font-weight:500">⚡ Extended Thinking</div>
+                <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted)">Deeper reasoning · More tokens</div>
+              </div>
+              <div class="sw" id="thinkingSwitch" onclick="toggleThinkingGlobal()"></div>
+            </div>
+            <div id="thinkingBudgetUI" class="hidden">
+              <div class="flex justify-between mb-1" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted)">
+                <span>Budget: <span id="budgetDisplay">1024</span> tokens</span>
+                <span id="budgetLabel">Balanced</span>
+              </div>
+              <input type="range" id="budgetRange" min="256" max="8192" step="256" value="1024" style="width:100%;accent-color:var(--pur)" oninput="updateBudget(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="panel p-4">
+          <div class="flex items-center gap-2 mb-3 pb-3 border-b">
+            <span>ℹ️</span><span class="font-bold text-sm">About</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="flex justify-between" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 0;border-bottom:1px solid var(--bdr2)">
+              <span style="color:var(--dim)">Version</span><span>2.0.0</span>
+            </div>
+            <div class="flex justify-between" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 0;border-bottom:1px solid var(--bdr2)">
+              <span style="color:var(--dim)">Stack</span><span>Vanilla JS · HTML · CSS</span>
+            </div>
+            <div class="flex justify-between" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 0;border-bottom:1px solid var(--bdr2)">
+              <span style="color:var(--dim)">AI Provider</span><span>Google Gemini (exclusive)</span>
+            </div>
+            <div class="flex justify-between" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 0;border-bottom:1px solid var(--bdr2)">
+              <span style="color:var(--dim)">Modules</span><span>15 production modules</span>
+            </div>
+            <div class="flex justify-between" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 0">
+              <span style="color:var(--dim)">Agents</span><span>9 Ghost Agents</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ═══════════════════ API KEY MODAL ═══════════════════ -->
+<div class="modal-bg hidden" id="keyModal" onclick="if(event.target===this)closeKeyModal()">
+  <div class="modal-box">
+    <div class="modal-title">🔑 Configure Gemini API Key</div>
+    <div class="modal-sub">Key stored in sessionStorage only — cleared on tab close</div>
+    <div class="mb-3">
+      <div class="label">API Key</div>
+      <div class="flex gap-2">
+        <input class="inp" id="keyInput" type="password" placeholder="AIzaSy…" style="flex:1">
+        <button class="btn btn-gh btn-sm" onclick="keyToggleVis()" id="keyVisBtn">👁</button>
+      </div>
+    </div>
+    <div class="mb-3">
+      <div class="label">Model</div>
+      <select class="inp" id="keyModel"></select>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <button class="btn btn-gh btn-sm" onclick="keyTest()" id="keyTestBtn">Test Connection</button>
+      <button class="btn btn-acc flex-1 justify-center" onclick="keySave()">Save &amp; Connect</button>
+    </div>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener"
+      style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);text-decoration:none">
+      ↗ Get free Gemini API key at Google AI Studio
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════════════ TASK MODAL ═══════════════════ -->
+<div class="modal-bg hidden" id="taskModal" onclick="if(event.target===this)closeTaskModal()">
+  <div class="modal-box">
+    <div class="modal-title">Task</div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <div class="label">Title</div>
+        <input class="inp" id="taskTitle" placeholder="Task title">
+      </div>
+      <div>
+        <div class="label">Description</div>
+        <textarea class="inp" id="taskDesc" rows="3" placeholder="Details…"></textarea>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="label">Status</div>
+          <select class="inp" id="taskStatus">
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">Priority</div>
+          <select class="inp" id="taskPriority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-acc flex-1 justify-center" onclick="taskSave()">Save</button>
+        <button class="btn btn-rd btn-sm" id="taskDeleteBtn" onclick="taskDelete()">Delete</button>
+        <button class="btn btn-gh btn-sm" onclick="closeTaskModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GALLERY MODAL ═══════════════════ -->
+<div class="modal-bg hidden" id="galleryModal" onclick="if(event.target===this)closeGalleryModal()">
+  <div class="modal-box">
+    <div class="modal-title">Gallery Item</div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <div class="label">Title</div>
+        <input class="inp" id="galTitle" placeholder="Item title">
+      </div>
+      <div>
+        <div class="label">Type</div>
+        <select class="inp" id="galType">
+          <option value="prompt">Prompt</option>
+          <option value="output">Output</option>
+          <option value="code">Code</option>
+          <option value="diagram">Diagram</option>
+          <option value="note">Note</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">Content</div>
+        <textarea class="inp" id="galContent" rows="6" placeholder="Content…"></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-acc flex-1 justify-center" onclick="galSave()">Save</button>
+        <button class="btn btn-gh btn-sm" onclick="closeGalleryModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// WHISPERX BUILDER MAX v2 — FULL JAVASCRIPT
+// ═══════════════════════════════════════════════════════════
+
+// ─── UTILS ───────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2,11) + Date.now().toString(36);
+const now = () => Date.now();
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function downloadText(filename, text) {
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename; a.click();
+}
+function downloadJson(filename, obj) {
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(obj,null,2));
+  a.download = filename; a.click();
+}
+function fileToBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+function toast(msg, color='var(--grn)') {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{
+    position:'fixed',bottom:'24px',right:'24px',zIndex:'999',
+    background:'var(--bg2)',border:`1px solid ${color}`,borderRadius:'10px',
+    padding:'10px 16px',fontSize:'12px',fontFamily:"'Space Mono',monospace",
+    color,animation:'fadeIn 0.2s ease',pointerEvents:'none'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── STATE ────────────────────────────────────────────────
+const DEFAULTS = {
+  geminiModel:'gemini-2.5-flash',
+  thinkingEnabled:false,
+  thinkingBudget:1024,
+  theme:'midnight-galaxy',
+  messages:[],
+  activeAgent:'ARIA',
+  gallery:[],
+  tasks:[],
+  skills:[],
+  lockspecs:[],
+  activeLockspecId:null,
+  buildRuns:[],
+  docs:[],
+  activeDocId:null,
+  visionSessions:[],
+  activeVisionId:null,
+  presSlides:[],
+  activeSlideIdx:0,
+  chartDatasets:[],
+};
+const S = { ...DEFAULTS };
+const PERSIST_KEYS = ['geminiModel','thinkingEnabled','thinkingBudget','theme','gallery','tasks','skills','lockspecs','buildRuns','docs','visionSessions','presSlides','chartDatasets'];
+
+function saveState() {
+  const obj = {};
+  PERSIST_KEYS.forEach(k => { obj[k] = S[k]; });
+  localStorage.setItem('wxbmax_v2', JSON.stringify(obj));
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem('wxbmax_v2');
+    if (raw) {
+      const obj = JSON.parse(raw);
+      PERSIST_KEYS.forEach(k => { if (obj[k] !== undefined) S[k] = obj[k]; });
+    }
+  } catch(e) {}
+  S.geminiModel = (S.geminiModel === 'gemini-2.5-flash-preview-04-17') ? 'gemini-2.5-flash' : S.geminiModel;
+  S.geminiModel = (S.geminiModel === 'gemini-2.5-pro-preview-03-25') ? 'gemini-2.5-pro' : S.geminiModel;
+  if (!GEMINI_MODELS.some(m => m.id === S.geminiModel)) S.geminiModel = DEFAULTS.geminiModel;
+  // Load API key from sessionStorage
+  S.geminiKey = sessionStorage.getItem('wx_gemini_key') || '';
+}
+
+// ─── GEMINI MODELS ───────────────────────────────────────
+const GEMINI_MODELS = [
+  { id:'gemini-2.5-flash',               label:'Gemini 2.5 Flash',    thinking:true },
+  { id:'gemini-2.5-pro',                 label:'Gemini 2.5 Pro',      thinking:true },
+  { id:'gemini-2.0-flash',               label:'Gemini 2.0 Flash',    thinking:false },
+  { id:'gemini-2.0-flash-lite',          label:'Gemini 2.0 Flash Lite',thinking:false },
+  { id:'gemini-1.5-flash',               label:'Gemini 1.5 Flash',    thinking:false },
+];
+
+// ─── AGENTS ──────────────────────────────────────────────
+const AGENTS = [
+  { id:'REX',  name:'REX',  role:'Security',    color:'#ff4d4d', model:'gemini-2.0-flash',               thinking:false, desc:'Security auditing, threat detection, vulnerability analysis.' },
+  { id:'ARIA', name:'ARIA', role:'Orchestrator',color:'#a480ff', model:'gemini-2.5-flash', thinking:true,  desc:'Cross-agent coordination, strategy, decision synthesis.' },
+  { id:'KODE', name:'KODE', role:'Developer',   color:'#00e676', model:'gemini-2.5-flash', thinking:true,  desc:'Engineering, code generation, architecture.' },
+  { id:'LUMA', name:'LUMA', role:'Designer',    color:'#ff4081', model:'gemini-2.0-flash',               thinking:false, desc:'UI/UX, design systems, visual engineering.' },
+  { id:'SAGE', name:'SAGE', role:'Analyst',     color:'#00d8ff', model:'gemini-2.5-pro',   thinking:true,  desc:'Data synthesis, strategic forecasting, metrics.' },
+  { id:'NOX',  name:'NOX',  role:'Shadow',      color:'#7c4dff', model:'gemini-2.0-flash',               thinking:false, desc:'Background optimization, caching, process tuning.' },
+  { id:'SOL',  name:'SOL',  role:'Clarity',     color:'#ffab00', model:'gemini-1.5-flash',               thinking:false, desc:'Documentation, user-centric writing, guides.' },
+  { id:'VOX',  name:'VOX',  role:'Voice',       color:'#ff80ab', model:'gemini-1.5-flash',               thinking:false, desc:'NLP, sentiment analysis, localization, Thai support.' },
+  { id:'ZENS', name:'ZENS', role:'Ethics',      color:'#b0bec5', model:'gemini-2.5-pro',   thinking:true,  desc:'Compliance, ethical AI, balanced decisions.' },
+];
+
+// ─── THEMES ──────────────────────────────────────────────
+const THEMES = {
+  'midnight-galaxy':  { name:'Midnight Galaxy',   emoji:'🌌', bg:'#070c12',bg2:'#0e1520',bg3:'#131e2c',hov:'#192436',bdr:'#1e3048',txt:'#d8eaf8',muted:'#7a99b8',dim:'#3d5a7a',acc:'#00d8ff',pur:'#7c4dff',font:'Outfit' },
+  'ocean-depths':     { name:'Ocean Depths',      emoji:'🌊', bg:'#010d1a',bg2:'#001833',bg3:'#002040',hov:'#00204a',bdr:'rgba(0,136,255,0.15)',txt:'#e8f4fd',muted:'#7ab4cc',dim:'#2a5a80',acc:'#0088ff',pur:'#0055cc',font:'Outfit' },
+  'sunset-boulevard': { name:'Sunset Boulevard',  emoji:'🌅', bg:'#1a0505',bg2:'#2d0a0a',bg3:'#3d1010',hov:'#4a1515',bdr:'rgba(255,107,53,0.15)',txt:'#fdf0e8',muted:'#cc9478',dim:'#8a4428',acc:'#ff6b35',pur:'#ff3366',font:'Syne' },
+  'forest-canopy':    { name:'Forest Canopy',     emoji:'🌲', bg:'#010a05',bg2:'#071a0a',bg3:'#0a2210',hov:'#0e2a14',bdr:'rgba(45,158,79,0.15)',txt:'#edf5ee',muted:'#78b482',dim:'#2a6035',acc:'#2d9e4f',pur:'#00f5a0',font:'Outfit' },
+  'modern-minimalist':{ name:'Modern Minimalist', emoji:'⬛', bg:'#0a0a0a',bg2:'#141414',bg3:'#1a1a1a',hov:'#202020',bdr:'rgba(255,255,255,0.08)',txt:'#f5f5f5',muted:'#b4b4b4',dim:'#666666',acc:'#e0e0e0',pur:'#999999',font:'Outfit' },
+  'golden-hour':      { name:'Golden Hour',       emoji:'🍂', bg:'#0f0a01',bg2:'#1a1200',bg3:'#221800',hov:'#2a1e00',bdr:'rgba(201,162,39,0.15)',txt:'#fdf5dc',muted:'#c8aa5a',dim:'#7a6020',acc:'#c9a227',pur:'#ffcc00',font:'Syne' },
+  'arctic-frost':     { name:'Arctic Frost',      emoji:'❄️', bg:'#01080f',bg2:'#051520',bg3:'#071c2a',hov:'#091e2e',bdr:'rgba(136,200,255,0.12)',txt:'#e8f8ff',muted:'#88c8f0',dim:'#2a5a80',acc:'#88ccff',pur:'#44aaff',font:'Outfit' },
+  'desert-rose':      { name:'Desert Rose',       emoji:'🌹', bg:'#0f0805',bg2:'#1a100a',bg3:'#221510',hov:'#2a1a14',bdr:'rgba(193,122,94,0.12)',txt:'#f5ede8',muted:'#c17a5e',dim:'#7a4030',acc:'#c17a5e',pur:'#d4906a',font:'Syne' },
+  'tech-innovation':  { name:'Tech Innovation',   emoji:'⚡', bg:'#010510',bg2:'#020a1f',bg3:'#040e28',hov:'#060f2e',bdr:'rgba(68,136,255,0.15)',txt:'#e8f0ff',muted:'#6496dc',dim:'#2a3a7a',acc:'#4488ff',pur:'#00ccff',font:'Outfit' },
+  'botanical-garden': { name:'Botanical Garden',  emoji:'🌿', bg:'#010808',bg2:'#051210',bg3:'#071815',hov:'#091c19',bdr:'rgba(0,200,150,0.12)',txt:'#e8faf5',muted:'#50b496',dim:'#1a5a46',acc:'#00c896',pur:'#00f0c0',font:'Outfit' },
+};
+
+function applyTheme(id) {
+  const t = THEMES[id] || THEMES['midnight-galaxy'];
+  const r = document.documentElement.style;
+  r.setProperty('--bg',  t.bg);   r.setProperty('--bg2', t.bg2);
+  r.setProperty('--bg3', t.bg3);  r.setProperty('--hov', t.hov);
+  r.setProperty('--bdr', t.bdr);  r.setProperty('--txt', t.txt);
+  r.setProperty('--muted',t.muted);r.setProperty('--dim', t.dim);
+  r.setProperty('--acc', t.acc);  r.setProperty('--pur', t.pur);
+  r.setProperty('--font',`'${t.font}',sans-serif`);
+  S.theme = id; saveState();
+}
+
+// ─── GEMINI API ──────────────────────────────────────────
+const GEMINI_API_BASES = [
+  'https://generativelanguage.googleapis.com/v1/models',
+  'https://generativelanguage.googleapis.com/v1beta/models',
+];
+
+function getKey() {
+  const k = sessionStorage.getItem('wx_gemini_key') || '';
+  if (!k) throw new Error('Gemini API key not set — click the key icon to configure.');
+  return k;
+}
+
+async function geminiText(prompt, { model, temperature=0.7, maxTokens=8192, thinkingBudget, imagePart, system } = {}) {
+  const key = getKey();
+  const m = model || S.geminiModel;
+  const parts = [];
+  if (imagePart) parts.push({ inlineData:{ mimeType:imagePart.mimeType, data:imagePart.data }});
+  parts.push({ text: prompt });
+  const body = {
+    contents:[{ role:'user', parts }],
+    generationConfig:{ temperature, maxOutputTokens:maxTokens },
+  };
+  let lastErr = null;
+  for (const base of GEMINI_API_BASES) {
+    try {
+      const r = await fetch(`${base}/${m}:generateContent?key=${key}`,{
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+      const d = await r.json();
+      return d?.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text || '';
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('Gemini API request failed.');
+    let full='', thinking='', lastErr = null;
+    for (const base of GEMINI_API_BASES) {
+      try {
+        const r = await fetch(`${base}/${m}:streamGenerateContent?key=${key}&alt=sse`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+        const reader = r.body.getReader(), dec = new TextDecoder();
+        let buf='';
+        const processSseEvent = (eventText) => {
+          const payload = eventText
+            .split('\n')
+            .filter(line => line.startsWith('data:'))
+            .map(line => line.replace(/^data:\s?/, ''))
+            .join('\n')
+            .trim();
+          if (!payload || payload === '[DONE]') return;
+          try {
+            const j = JSON.parse(payload);
+            const parts = Array.isArray(j?.candidates?.[0]?.content?.parts) ? j.candidates[0].content.parts : [];
+            for (const part of parts) {
+              if (part?.thought) { thinking += part?.text || ''; if(onThinking) onThinking(thinking); }
+              else { full += part?.text || ''; if(onChunk) onChunk(full); }
+            }
+          } catch(e){}
+        };
+        while(true) {
+          const {done,value} = await reader.read();
+          if(done) {
+            if (buf.trim()) processSseEvent(buf.trim());
+            break;
+          }
+          buf += dec.decode(value, {stream:true});
+          const events = buf.split('\n\n');
+          buf = events.pop() || '';
+          for (const eventText of events) {
+            processSseEvent(eventText);
+        }
+        if(onDone) onDone(full, thinking);
+        return;
+      catch (e) { lastErr = e; }
+    throw lastErr || new Error('Gemini stream failed.');
+      if(done) break;
+      buf += dec.decode(value, {stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const j = JSON.parse(raw);
+          for (const part of (j?.candidates?.[0]?.content?.parts || [])) {
+            if (part.thought) { thinking += part.text||''; if(onThinking) onThinking(thinking); }
+            else { full += part.text||''; if(onChunk) onChunk(full); }
+          }
+          buf += dec.decode(value, {stream:true});
+          const events = buf.split('\n\n');
+          buf = events.pop() || '';
+          for (const eventText of events) {
+            processSseEvent(eventText);
+          }
+        }
+        if(onDone) onDone(full, thinking);
+        return;
+      }
+      catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error('Gemini stream failed.');
+  } catch(e) { if(onError) onError(e); else throw e; }
+}
+
+// ─── MODULE SWITCHING ────────────────────────────────────
+const MODULE_TITLES = {
+  'ghost-team':      'Ghost Team — 9-Agent AI Chat',
+  'vision-pipeline': 'Vision Pipeline — 7-Stage Screenshot → Code',
+  'builder':         'Builder Studio — Lockspec → Gemini → PS1',
+  'skill-forge':     'Skill Forge — Claude Skill Author',
+  'doc-atelier':     'Doc Atelier — AI Document Writer',
+  'canvas':          'Canvas Studio — Visual Node Editor',
+  'mermaid':         'Mermaid — AI Diagram Editor',
+  'whiteboard':      'Whiteboard — Drawing Canvas',
+  'presentation':    'Presentation — AI Slide Generator',
+  'charts':          'Charts — Data Visualizer',
+  'tasks':           'Tasks — Kanban Board',
+  'gallery':         'Gallery — Prompt & Output Store',
+  'github':          'GitHub AI — Repo Explorer & Code Review',
+  'theme-lab':       'Theme Lab — 10 Production Themes',
+  'settings':        'Settings',
+};
+
+let currentModule = 'ghost-team';
+function switchModule(id) {
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const mod = $(`mod-${id}`);
+  if (mod) mod.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active');
+  });
+  $('topbarTitle').textContent = MODULE_TITLES[id] || id;
+  currentModule = id;
+  if (id === 'theme-lab') themeLabRender();
+  if (id === 'settings') settingsRender();
+  if (id === 'mermaid') mmRender();
+  if (id === 'charts') chartInit();
+  if (id === 'whiteboard') wbInit();
+  if (id === 'tasks') taskRender();
+  if (id === 'gallery') galleryRender();
+  if (id === 'presentation') presInit();
+}
+
+// ═══════════════════════════════════════════════════════════
+// API KEY MODAL
+// ═══════════════════════════════════════════════════════════
+function openKeyModal() {
+  const sel = $('keyModel');
+  if (sel.options.length === 0) {
+    GEMINI_MODELS.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id; opt.textContent = m.label;
+      sel.appendChild(opt);
+    });
+  }
+  sel.value = S.geminiModel;
+  $('keyInput').value = sessionStorage.getItem('wx_gemini_key') || '';
+  $('keyModal').classList.remove('hidden');
+  setTimeout(() => $('keyInput').focus(), 100);
+}
+function closeKeyModal() { $('keyModal').classList.add('hidden'); }
+function keyToggleVis() {
+  const inp = $('keyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+async function keyTest() {
+  const btn = $('keyTestBtn');
+  btn.textContent = 'Testing…'; btn.disabled = true;
+  const key = $('keyInput').value.trim();
+  if (!key) { toast('Enter an API key first', 'var(--red)'); btn.textContent='Test Connection'; btn.disabled=false; return; }
+  try {
+    sessionStorage.setItem('wx_gemini_key', key);
+    const model = $('keyModel').value;
+    const r = await fetch(`${BASE}/${model}:generateContent?key=${key}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{text:'Hi'}]}], generationConfig:{maxOutputTokens:16} })
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    btn.textContent = '✅ Connected!';
+    toast('✅ API key works!');
+  } catch(e) {
+    btn.textContent = '❌ Failed'; toast('❌ ' + e.message, 'var(--red)');
+  } finally { setTimeout(() => { btn.textContent='Test Connection'; btn.disabled=false; }, 2000); }
+}
+function keySave() {
+  const key = $('keyInput').value.trim();
+  const model = $('keyModel').value;
+  if (!key) { toast('Enter an API key', 'var(--red)'); return; }
+  sessionStorage.setItem('wx_gemini_key', key);
+  S.geminiKey = key;
+  S.geminiModel = model;
+  saveState();
+  updateKeyStatus();
+  closeKeyModal();
+  toast('✅ API key saved');
+}
+function updateKeyStatus() {
+  const hasKey = !!sessionStorage.getItem('wx_gemini_key');
+  $('keyDot').className = 'key-dot ' + (hasKey ? 'on' : 'off');
+  $('keyText').textContent = hasKey ? `${S.geminiModel.split('-').slice(0,3).join(' ')} ✓` : 'Click to add API key';
+  $('liveDot').style.background = hasKey ? 'var(--grn)' : 'var(--red)';
+  $('liveText').textContent = hasKey ? 'CONNECTED' : 'NOT CONNECTED';
+}
+
+// ═══════════════════════════════════════════════════════════
+// GHOST TEAM
+// ═══════════════════════════════════════════════════════════
+let gtThinking = false;
+
+function gtBuildBar() {
+  const bar = $('agentBar');
+  bar.innerHTML = '';
+  AGENTS.forEach(ag => {
+    const chip = document.createElement('div');
+    chip.className = 'agent-chip' + (ag.id === S.activeAgent ? ' active' : '');
+    chip.id = 'chip-' + ag.id;
+    chip.innerHTML = `<div class="agent-dot" style="background:${ag.color}"></div>${ag.name}<span style="font-size:8px;opacity:0.5;margin-left:2px">${ag.role}</span>`;
+    chip.onclick = () => setActiveAgent(ag.id);
+    bar.appendChild(chip);
+  });
+}
+function setActiveAgent(id) {
+  S.activeAgent = id;
+  document.querySelectorAll('.agent-chip').forEach(c => c.classList.remove('active'));
+  const chip = $('chip-' + id); if (chip) chip.classList.add('active');
+  const ag = AGENTS.find(a => a.id === id);
+  if (ag) {
+    const has = GEMINI_MODELS.find(m => m.id === ag.model)?.thinking;
+    $('gt-thinking-status').textContent = ag.thinking && has ? `⚡ ${ag.name} uses Thinking Mode` : '';
+  }
+}
+function toggleThinking() {
+  gtThinking = !gtThinking;
+  $('gt-thinking-toggle').innerHTML = `⚡ Thinking: ${gtThinking ? '<span style="color:var(--pur)">ON</span>' : 'OFF'}`;
+}
+function toggleThinkingGlobal() {
+  S.thinkingEnabled = !S.thinkingEnabled;
+  const sw = $('thinkingSwitch');
+  sw.className = 'sw ' + (S.thinkingEnabled ? 'sw-on' : 'sw-off');
+  sw.innerHTML = `<div class="sw-knob"></div>`;
+  $('thinkingBudgetUI').classList.toggle('hidden', !S.thinkingEnabled);
+  saveState();
+}
+function updateBudget(v) {
+  S.thinkingBudget = parseInt(v);
+  $('budgetDisplay').textContent = v;
+  const labels = { 256:'Minimal', 512:'Light', 1024:'Balanced', 2048:'Deep', 4096:'Thorough', 8192:'Maximum' };
+  $('budgetLabel').textContent = labels[v] || 'Custom';
+  saveState();
+}
+
+function gtBuildMsgEl(role, content, agentId, thinking) {
+  const wrap = document.createElement('div');
+  wrap.className = 'flex gap-3 fade-in ' + (role === 'user' ? 'justify-end' : '');
+  const ag = role === 'assistant' ? AGENTS.find(a => a.id === agentId) : null;
+  if (role === 'assistant') {
+    wrap.innerHTML = `
+      <div style="width:28px;height:28px;border-radius:50%;background:${ag?.color||'var(--acc)'}22;border:1px solid ${ag?.color||'var(--acc)'}44;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${ag?.color||'var(--acc)'};flex-shrink:0;align-self:flex-start">
+        ${(ag?.name||'AI')[0]}
+      </div>
+      <div style="flex:1;max-width:75%">
+        <div style="font-size:9px;font-family:'Space Mono',monospace;color:${ag?.color||'var(--muted)'};margin-bottom:5px">${ag?.name||'AI'} · ${ag?.role||'Assistant'}</div>
+        ${thinking ? `<div class="thinking-block mb-2">${esc(thinking)}</div>` : ''}
+        <div class="msg-ai" id="msg-${uid()}">${esc(content)}</div>
+      </div>`;
+  } else {
+    wrap.innerHTML = `<div class="msg-user">${esc(content)}</div>`;
+  }
+  return wrap;
+}
+
+function gtTypingEl() {
+  const wrap = document.createElement('div');
+  wrap.className = 'flex gap-3 fade-in';
+  wrap.id = 'typing-indicator';
+  wrap.innerHTML = `
+    <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,216,255,0.1);border:1px solid rgba(0,216,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--acc);flex-shrink:0">
+      ${S.activeAgent[0]}
+    </div>
+    <div class="msg-ai" style="display:flex;align-items:center;gap:5px;min-width:60px">
+      <div class="typing-dot" style="animation:blink 1.2s 0s infinite"></div>
+      <div class="typing-dot" style="animation:blink 1.2s 0.2s infinite"></div>
+      <div class="typing-dot" style="animation:blink 1.2s 0.4s infinite"></div>
+    </div>`;
+  return wrap;
+}
+
+async function sendChat() {
+  const inp = $('chatInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+
+  // Clear empty state
+  const msgs = $('chatMessages');
+  const empty = msgs.querySelector('.empty');
+  if (empty) empty.remove();
+
+  // Add user msg
+  const userMsg = { id:uid(), role:'user', content:text, ts:now() };
+  S.messages.push(userMsg);
+  msgs.appendChild(gtBuildMsgEl('user', text));
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Add typing
+  const typing = gtTypingEl();
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+  $('sendBtn').disabled = true;
+
+  const ag = AGENTS.find(a => a.id === S.activeAgent);
+  const useThinking = (gtThinking || (ag?.thinking && S.thinkingEnabled)) && GEMINI_MODELS.find(m=>m.id===(ag?.model||S.geminiModel))?.thinking;
+  const system = `You are ${ag?.name||'AI'}, a ${ag?.role||'AI Assistant'}. ${ag?.desc||''} Be concise, direct, and expert. Use markdown for code blocks when relevant.`;
+
+  // Build conversation context (last 10 msgs)
+  const history = S.messages.slice(-11,-1);
+  let prompt = history.map(m => `${m.role==='user'?'User':'Assistant'}: ${m.content}`).join('\n') + `\nUser: ${text}\nAssistant:`;
+
+  // Prepare streaming response
+  let aiContent = '';
+  let aiThinking = '';
+  const aiMsg = { id:uid(), role:'assistant', content:'', thinking:'', agentId:S.activeAgent, ts:now() };
+  S.messages.push(aiMsg);
+
+  // Insert AI msg element
+  typing.remove();
+  let thinkDiv = null;
+  const aiWrap = document.createElement('div');
+  aiWrap.className = 'flex gap-3 fade-in';
+  aiWrap.innerHTML = `
+    <div style="width:28px;height:28px;border-radius:50%;background:${ag?.color||'var(--acc)'}22;border:1px solid ${ag?.color||'var(--acc)'}44;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${ag?.color||'var(--acc)'};flex-shrink:0;align-self:flex-start">
+      ${(ag?.name||'AI')[0]}
+    </div>
+    <div style="flex:1;max-width:75%">
+      <div style="font-size:9px;font-family:'Space Mono',monospace;color:${ag?.color||'var(--muted)'};margin-bottom:5px">${ag?.name||'AI'} · ${ag?.role||'Assistant'}</div>
+      <div id="think-wrap-${aiMsg.id}" class="hidden mb-2"><div class="thinking-block" id="think-${aiMsg.id}"></div></div>
+      <div class="msg-ai" id="out-${aiMsg.id}" style="min-width:60px">▊</div>
+    </div>`;
+  msgs.appendChild(aiWrap);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const outEl = $(`out-${aiMsg.id}`);
+  const thinkWrap = $(`think-wrap-${aiMsg.id}`);
+  const thinkEl = $(`think-${aiMsg.id}`);
+
+  await geminiStream(prompt, {
+    model: ag?.model || S.geminiModel,
+    system,
+    temperature: 0.7,
+    thinkingBudget: useThinking ? S.thinkingBudget : 0,
+    onThinking: (t) => {
+      aiThinking = t; aiMsg.thinking = t;
+      thinkWrap.classList.remove('hidden');
+      thinkEl.textContent = t.slice(-200);
+      msgs.scrollTop = msgs.scrollHeight;
+    },
+    onChunk: (full) => {
+      aiContent = full; aiMsg.content = full;
+      outEl.textContent = full + '▊';
+      msgs.scrollTop = msgs.scrollHeight;
+    },
+    onDone: (full, thinking) => {
+      aiContent = full; aiMsg.content = full;
+      outEl.textContent = full || '(No response)';
+      if (!thinking) thinkWrap.classList.add('hidden');
+      $('sendBtn').disabled = false;
+      $('gt-msgcount').textContent = `${S.messages.length} messages`;
+      saveState();
+    },
+    onError: (e) => {
+      outEl.textContent = '❌ ' + e.message;
+      outEl.style.color = 'var(--red)';
+      $('sendBtn').disabled = false;
+      toast('❌ ' + e.message, 'var(--red)');
+    }
+  });
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+function clearChat() {
+  S.messages = [];
+  $('chatMessages').innerHTML = `<div class="empty"><div class="empty-icon float">👻</div><div class="empty-text">Ghost Team standing by.</div><div class="empty-sub">Select an agent and send your first message.</div></div>`;
+  $('gt-msgcount').textContent = '0 messages';
+  saveState();
+}
+function exportChat() {
+  const text = S.messages.map(m => `[${m.role.toUpperCase()}${m.agentId?' ('+m.agentId+')':''}]\n${m.content}`).join('\n\n---\n\n');
+  downloadText('ghost-team-chat.txt', text);
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISION PIPELINE
+// ═══════════════════════════════════════════════════════════
+const VP_STAGES = [
+  { id:'blueprint', label:'Blueprint',  prompt: ctx => `Analyze this UI screenshot and extract a structural blueprint.\n${ctx}\n\nReturn ONLY JSON: {"layout":"desc","sections":["name"],"navigation":"pattern","primaryAction":"CTA","dataDisplayed":["el"],"interactions":["action"]}` },
+  { id:'tokens',    label:'Tokens',     prompt: ctx => `Extract design tokens from this UI.\n${ctx}\n\nReturn ONLY JSON: {"colors":{"primary":"hex","background":"hex","surface":"hex","text":"hex","accent":"hex"},"typography":{"heading":"","body":"","mono":""},"spacing":"desc","borderRadius":"pattern","shadows":"desc"}` },
+  { id:'patterns',  label:'Patterns',   prompt: ctx => `Identify React component patterns for this UI.\n${ctx}\n\nReturn ONLY JSON: {"components":["Name"],"stateManagement":"zustand","routing":"pattern","dataFetching":"fetch","animationLib":"framer-motion","specialPatterns":["pattern"]}` },
+  { id:'codegen',   label:'Code Gen',   prompt: ctx => `Generate a complete React/TypeScript/Tailwind component for this UI.\n${ctx}\n\nReturn ONLY production-ready TSX. No explanation. Full implementations.` },
+  { id:'rules',     label:'Lockspec',   prompt: ctx => `Generate lockspec constraints for this UI as a Next.js 14 app.\n${ctx}\n\nReturn ONLY JSON: {"stack":"Next.js 14, TypeScript, Tailwind CSS 3","constraints":["rule"],"modules":["module"],"geminiModel":"gemini-2.5-flash"}` },
+  { id:'refine',    label:'Refine',     prompt: ctx => `Review and improve the generated code for this UI.\n${ctx}\n\nList: 1) Accessibility 2) Performance 3) Edge cases 4) Responsive 5) TypeScript improvements. Be specific.` },
+  { id:'export',    label:'Export',     prompt: ctx => `Summarize the full build spec for this UI.\n${ctx}\n\nReturn a structured PS1 comment block with: project name, stack, modules, key constraints.` },
+];
+
+let vpSessions = [];
+let vpActiveId = null;
+
+function vpRenderSessionList() {
+  const list = $('vpSessionList');
+  if (!vpSessions.length) { list.innerHTML = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">Drop an image or upload</div>'; return; }
+  list.innerHTML = '';
+  vpSessions.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'li' + (s.id === vpActiveId ? ' active' : '');
+    const done = s.stages.filter(x => x.status === 'done').length;
+    el.innerHTML = `<div style="font-size:11px;font-weight:500;truncate">${esc(s.name)}</div><div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">${done}/${s.stages.length} stages</div>`;
+    el.onclick = () => { vpActiveId = s.id; vpRenderSessionList(); vpRenderStageTrack(); vpRenderOutput(null); };
+    list.appendChild(el);
+  });
+}
+
+function vpRenderStageTrack() {
+  const sess = vpSessions.find(s => s.id === vpActiveId);
+  const track = $('vpStageTrack');
+  if (!sess) { track.innerHTML = ''; return; }
+  track.innerHTML = '';
+  sess.stages.forEach((st, i) => {
+    const node = document.createElement('div');
+    node.className = 'stage-node' + (i > 0 && sess.stages[i-1].status === 'done' ? ' done' : '');
+    node.innerHTML = `<div class="sn-dot ${st.status}"></div><div class="sn-lbl">${st.label}</div>`;
+    node.onclick = () => vpRenderOutput(st.id);
+    track.appendChild(node);
+  });
+  $('vpRunBtn').disabled = !sess?.imageBase64;
+}
+
+function vpRenderOutput(stageId) {
+  const sess = vpSessions.find(s => s.id === vpActiveId);
+  const pane = $('vpOutputPane');
+  if (!sess) { pane.innerHTML = '<div class="empty"><div class="empty-icon">👁</div><div class="empty-text">Select a session</div></div>'; return; }
+  if (!stageId) {
+    // Show all stages overview
+    pane.innerHTML = `<div style="margin-bottom:12px"><div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">All Stages</div>
+      ${sess.stages.map(st => `
+        <div class="li" onclick="vpRenderOutput('${st.id}')" style="margin-bottom:4px">
+          <div class="flex items-center gap-2">
+            <div class="sn-dot ${st.status}" style="width:10px;height:10px;flex-shrink:0"></div>
+            <span style="font-size:12px;font-weight:500">${st.label}</span>
+            ${st.output ? `<span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">${esc(st.output.slice(0,40))}…</span>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+    return;
+  }
+  const st = sess.stages.find(s => s.id === stageId);
+  if (!st) return;
+  pane.innerHTML = `
+    <div class="flex items-center justify-between mb-3">
+      <div style="font-size:13px;font-weight:600">${st.label}</div>
+      ${st.output ? `<button class="btn btn-gh btn-xs" onclick="downloadText('${st.id}.txt',\`${st.output.replace(/`/g,'\\`')}\`)">⬇ Save</button>` : ''}
+    </div>
+    <div class="code" style="min-height:200px">${esc(st.output || (st.status==='running'?'⏳ Running…':'Not yet run. Click ▶ Run Pipeline.'))}</div>`;
+}
+
+function vpUploadNew() { $('vpFileInput').click(); }
+
+async function vpOnFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  await vpLoadFile(file);
+  e.target.value = '';
+}
+
+async function vpOnDrop(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files?.[0];
+  if (file?.type.startsWith('image/')) await vpLoadFile(file);
+}
+
+async function vpLoadFile(file) {
+  const b64 = await fileToBase64(file);
+  const sess = {
+    id: uid(), name: file.name,
+    imageBase64: b64, imageMime: file.type,
+    imageUrl: URL.createObjectURL(file),
+    context: '',
+    stages: VP_STAGES.map(s => ({ id:s.id, label:s.label, status:'idle', output:'' })),
+    createdAt: now(),
+  };
+  vpSessions.unshift(sess);
+  vpActiveId = sess.id;
+
+  // Show image in pane
+  const wrap = $('vpImageWrap');
+  wrap.innerHTML = `<img src="${sess.imageUrl}" class="vision-img" alt="screenshot">`;
+  wrap.style.border = 'none';
+
+  vpRenderSessionList();
+  vpRenderStageTrack();
+  vpRenderOutput(null);
+  toast('✅ Image loaded — click Run Pipeline');
+}
+
+async function vpRunPipeline() {
+  const sess = vpSessions.find(s => s.id === vpActiveId);
+  if (!sess?.imageBase64) return;
+  const btn = $('vpRunBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running…';
+  const ctx = $('vpContext').value || 'No additional context';
+
+  for (const def of VP_STAGES) {
+    // Update stage status
+    const st = sess.stages.find(s => s.id === def.id);
+    st.status = 'running'; vpRenderStageTrack();
+    try {
+      let out = '';
+      if (def.id === 'codegen' || def.id === 'refine' || def.id === 'export') {
+        const prevCtx = sess.stages.map(s => `[${s.label}]: ${s.output || 'pending'}`).join('\n');
+        out = await geminiText(def.prompt(`Context: ${ctx}\n\nPrevious stages:\n${prevCtx}`), {
+          model: 'gemini-2.0-flash', temperature:0.6, maxTokens:8192
+        });
+      } else {
+        out = await geminiText(def.prompt(`Context: ${ctx}`), {
+          model: 'gemini-2.0-flash', imagePart:{ mimeType:sess.imageMime, data:sess.imageBase64 }
+        });
+      }
+      st.status = 'done'; st.output = out;
+    } catch(e) {
+      st.status = 'error'; st.output = '❌ ' + e.message;
+    }
+    vpRenderStageTrack();
+    vpRenderOutput(def.id);
+    await sleep(100);
+  }
+  btn.disabled = false; btn.textContent = '▶ Run Pipeline';
+  toast('✅ Vision Pipeline complete');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUILDER STUDIO
+// ═══════════════════════════════════════════════════════════
+let bsStreamOutput = '';
+
+function bsRenderLockspecList() {
+  const list = $('bsLockspecList');
+  if (!S.lockspecs.length) { list.innerHTML = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No lockspecs yet</div>'; return; }
+  list.innerHTML = '';
+  S.lockspecs.forEach(ls => {
+    const el = document.createElement('div');
+    el.className = 'li' + (S.activeLockspecId === ls.id ? ' active' : '');
+    el.innerHTML = `<div style="font-size:11px;font-weight:500">${esc(ls.name)}</div><div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">v${ls.version}</div>`;
+    el.onclick = () => { S.activeLockspecId = ls.id; bsRenderLockspecList(); bsRenderEditor(); };
+    list.appendChild(el);
+  });
+}
+
+function bsNewLockspec() {
+  const ls = {
+    id:uid(), name:'My Project', version:'1.0.0',
+    stack:'Next.js 14, TypeScript strict, Tailwind CSS 3, Gemini AI',
+    objective:'', modules:[''], constraints:['sessionStorage for API key','Zero placeholders'],
+    geminiModel:'gemini-2.5-flash', thinkingEnabled:false, createdAt:now()
+  };
+  S.lockspecs.unshift(ls);
+  S.activeLockspecId = ls.id;
+  bsStreamOutput = '';
+  saveState(); bsRenderLockspecList(); bsRenderEditor();
+}
+
+function bsRenderEditor() {
+  const editor = $('bsEditor');
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (!ls) { editor.innerHTML = '<div class="empty"><div class="empty-icon">🔨</div><div class="empty-text">Create a lockspec to start building</div><button class="btn btn-acc mt-3" onclick="bsNewLockspec()">New Lockspec</button></div>'; return; }
+
+  editor.innerHTML = `
+    <div class="flex items-start justify-between gap-4 flex-shrink-0">
+      <div>
+        <div class="mod-title" style="font-size:14px">Builder Studio</div>
+        <div class="mod-sub">Lockspec → Gemini → Production PS1</div>
+      </div>
+      <div class="flex gap-2 flex-shrink-0">
+        ${bsStreamOutput ? `<button class="btn btn-gh btn-sm" style="color:var(--grn)" onclick="downloadText('${ls.name.replace(/\s+/g,'-').toLowerCase()}.ps1',bsStreamOutput)">⬇ PS1</button>` : ''}
+        <button class="btn btn-acc btn-sm" id="bsGenBtn" onclick="bsGenerate()">✨ Generate PS1</button>
+      </div>
+    </div>
+
+    <!-- Stage bar -->
+    <div class="panel p-3">
+      <div class="stage-track" id="bsStageTrack">
+        ${['idle','init','planning','generating','validating','done'].map((st,i) => `
+          <div class="stage-node"><div class="sn-dot idle" id="bsst-${st}"></div><div class="sn-lbl">${st}</div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div><div class="label">Project Name</div><input class="inp" value="${esc(ls.name)}" oninput="bsPatch('name',this.value)"></div>
+      <div><div class="label">Version</div><input class="inp" value="${esc(ls.version)}" oninput="bsPatch('version',this.value)"></div>
+    </div>
+    <div><div class="label">Stack</div><input class="inp" value="${esc(ls.stack)}" oninput="bsPatch('stack',this.value)"></div>
+    <div><div class="label">Objective *</div><textarea class="inp" rows="4" placeholder="Describe what this PS1 should build…" oninput="bsPatch('objective',this.value)">${esc(ls.objective)}</textarea></div>
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <div class="label">Modules</div>
+        <button class="btn btn-gh btn-xs" onclick="bsAddModule()">+ Add</button>
+      </div>
+      <div id="bsModuleList" style="display:flex;flex-direction:column;gap:6px">
+        ${ls.modules.map((m,i) => `<div class="flex gap-2"><input class="inp flex-1" value="${esc(m)}" placeholder="Module ${i+1}" oninput="bsSetModule(${i},this.value)"><button class="btn btn-rd btn-xs" onclick="bsRemoveModule(${i})">✕</button></div>`).join('')}
+      </div>
+    </div>
+    <div class="grid2">
+      <div><div class="label">Gemini Model</div>
+        <select class="inp" onchange="bsPatch('geminiModel',this.value)">
+          ${GEMINI_MODELS.map(m => `<option value="${m.id}" ${ls.geminiModel===m.id?'selected':''}>${m.label}</option>`).join('')}
+        </select>
+      </div>
+      <div><div class="label">Thinking Mode</div>
+        <button class="btn btn-gh btn-sm w-full" style="${ls.thinkingEnabled?'border-color:rgba(124,77,255,0.4);color:#a480ff':''}" onclick="bsPatch('thinkingEnabled',!document.querySelector('#bsEditor [data-th]')?true:false)">
+          ${ls.thinkingEnabled ? '⚡ Enabled' : 'Disabled'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function bsPatch(key, val) {
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (ls) { ls[key] = val; saveState(); }
+}
+function bsAddModule() {
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (ls) { ls.modules.push(''); saveState(); bsRenderEditor(); }
+}
+function bsSetModule(i, v) {
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (ls) { ls.modules[i] = v; saveState(); }
+}
+function bsRemoveModule(i) {
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (ls) { ls.modules.splice(i,1); saveState(); bsRenderEditor(); }
+}
+
+function bsLog(msg) {
+  const log = $('bsLog');
+  const el = document.createElement('p');
+  el.style.cssText = 'font-size:10px;font-family:Space Mono,monospace;color:var(--muted);line-height:1.5';
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  if (log.querySelector('div[style*="italic"]')) log.innerHTML = '';
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+function bsSetStage(stage) {
+  const stages = ['idle','init','planning','generating','validating','done','error'];
+  const idx = stages.indexOf(stage);
+  stages.forEach((st, i) => {
+    const el = $('bsst-' + st);
+    if (!el) return;
+    if (i < idx) el.className = 'sn-dot done';
+    else if (i === idx) el.className = stage === 'error' ? 'sn-dot error' : 'sn-dot active';
+    else el.className = 'sn-dot idle';
+  });
+}
+
+async function bsGenerate() {
+  const ls = S.lockspecs.find(l => l.id === S.activeLockspecId);
+  if (!ls?.objective) { toast('Add an objective first', 'var(--amb)'); return; }
+  const btn = $('bsGenBtn');
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  bsStreamOutput = '';
+  $('bsLog').innerHTML = '';
+  $('bsPreview').classList.add('hidden');
+
+  for (const st of ['init','planning','generating','validating']) {
+    bsSetStage(st); bsLog(`Stage: ${st}`);
+    await sleep(250);
+  }
+
+  const prompt = `You are WhisperX Builder MAX — a PowerShell scaffold generator.
+Generate a COMPLETE, production-ready PowerShell OneClick PS1 script for:
+
+PROJECT: ${ls.name} v${ls.version}
+STACK: ${ls.stack}
+OBJECTIVE: ${ls.objective}
+MODULES: ${ls.modules.filter(Boolean).join(', ') || 'Standard modules'}
+GEMINI MODEL: ${ls.geminiModel}
+THINKING: ${ls.thinkingEnabled ? 'enabled' : 'disabled'}
+
+STRICT RULES:
+- Use @'...'@ heredoc only (zero backtick escapes in file content)
+- Next.js 14 Pages Router, TypeScript strict, Tailwind CSS 3
+- Gemini AI ONLY — no other AI providers
+- sessionStorage for API key (never localStorage)
+- All async functions must have try/catch
+- Include: package.json, next.config.js, tsconfig.json, tailwind.config.js, styles/globals.css
+- Include: pages/index.tsx (full working UI), pages/api/ai/chat.ts (SSE streaming endpoint)
+- End script with: pnpm install && pnpm dev
+
+Zero placeholders. Zero TODOs. Every file complete. Return ONLY the PS1 script.`;
+
+  bsLog('Calling Gemini…');
+  await geminiStream(prompt, {
+    model: ls.geminiModel,
+    temperature: 0.5,
+    thinkingBudget: ls.thinkingEnabled ? S.thinkingBudget : 0,
+    onChunk: (full) => {
+      bsStreamOutput = full;
+      $('bsPreview').classList.remove('hidden');
+      $('bsPreviewCode').textContent = full.slice(-400);
+    },
+    onDone: (full) => {
+      bsStreamOutput = full;
+      bsSetStage('done'); bsLog('✅ Done. Ready to download.');
+      btn.disabled = false; btn.textContent = '✨ Generate PS1';
+      bsRenderEditor();
+      saveState();
+      toast('✅ PS1 generated');
+    },
+    onError: (e) => {
+      bsSetStage('error'); bsLog('❌ ' + e.message);
+      btn.disabled = false; btn.textContent = '✨ Generate PS1';
+      toast('❌ ' + e.message, 'var(--red)');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SKILL FORGE
+// ═══════════════════════════════════════════════════════════
+function sfNew() {
+  const sk = {
+    id:uid(), name:'New Skill', description:'', trigger:'',
+    content:'', tests:[], status:'draft', createdAt:now()
+  };
+  S.skills.unshift(sk);
+  S.activeSkillId = sk.id;
+  saveState(); sfRenderList(); sfRenderEditor();
+}
+
+function sfRenderList() {
+  const list = $('sfList');
+  if (!S.skills.length) { list.innerHTML = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No skills yet</div>'; return; }
+  list.innerHTML = '';
+  S.skills.forEach(sk => {
+    const el = document.createElement('div');
+    el.className = 'li' + (S.activeSkillId === sk.id ? ' active' : '');
+    el.innerHTML = `<div style="font-size:11px;font-weight:500">${esc(sk.name)}</div><div class="skill-status ${sk.status}">${sk.status}</div>`;
+    el.onclick = () => { S.activeSkillId = sk.id; sfRenderList(); sfRenderEditor(); };
+    list.appendChild(el);
+  });
+}
+
+function sfRenderEditor() {
+  const editor = $('sfEditor');
+  const sk = S.skills.find(s => s.id === S.activeSkillId);
+  if (!sk) { editor.innerHTML = '<div class="empty"><div class="empty-icon">⚗️</div><div class="empty-text">Create a skill to start</div><button class="btn btn-acc mt-3" onclick="sfNew()">New Skill</button></div>'; return; }
+  editor.innerHTML = `
+    <div class="flex items-center justify-between mb-4">
+      <div class="mod-title">⚗️ Skill Forge</div>
+      <div class="flex gap-2">
+        <button class="btn btn-gh btn-sm" onclick="sfAiGenerate()" id="sfGenBtn">✨ AI Generate</button>
+        <button class="btn btn-acc btn-sm" onclick="sfRunTests()" id="sfTestBtn">▶ Run Tests</button>
+        <button class="btn btn-rd btn-sm" onclick="sfDelete()">✕</button>
+      </div>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div class="grid2">
+        <div><div class="label">Name</div><input class="inp" value="${esc(sk.name)}" oninput="sfPatch('name',this.value)"></div>
+        <div><div class="label">Status</div>
+          <select class="inp" onchange="sfPatch('status',this.value)">
+            ${['draft','ready','packaged'].map(s=>`<option value="${s}" ${sk.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div><div class="label">Description</div><input class="inp" value="${esc(sk.description)}" placeholder="What does this skill do?" oninput="sfPatch('description',this.value)"></div>
+      <div><div class="label">Trigger Phrases</div><input class="inp" value="${esc(sk.trigger)}" placeholder="When should Claude use this skill?" oninput="sfPatch('trigger',this.value)"></div>
+      <div><div class="label">Skill Content (SKILL.md)</div><textarea class="inp" rows="12" style="font-family:'Space Mono',monospace;font-size:11px" oninput="sfPatch('content',this.value)">${esc(sk.content)}</textarea></div>
+      <div>
+        <div class="flex items-center justify-between mb-2"><div class="label">Test Cases</div><button class="btn btn-gh btn-xs" onclick="sfAddTest()">+ Add</button></div>
+        <div id="sfTestList" style="display:flex;flex-direction:column;gap:6px">
+          ${(sk.tests||[]).map((t,i) => `
+            <div class="panel-i p-2 flex gap-2 items-start">
+              <div style="flex:1">
+                <input class="inp mb-1" style="font-size:11px" value="${esc(t.input)}" placeholder="Test input" oninput="sfSetTest(${i},'input',this.value)">
+                <input class="inp" style="font-size:11px" value="${esc(t.expected)}" placeholder="Expected behavior" oninput="sfSetTest(${i},'expected',this.value)">
+                ${t.result ? `<div style="font-size:10px;margin-top:4px" class="${t.passed?'test-pass':'test-fail'}">${t.passed?'✅':'❌'} ${esc(t.result)}</div>` : ''}
+              </div>
+              <button class="btn btn-rd btn-xs" onclick="sfRemoveTest(${i})">✕</button>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function sfPatch(k,v) { const sk=S.skills.find(s=>s.id===S.activeSkillId); if(sk){sk[k]=v;saveState();} }
+function sfAddTest() { const sk=S.skills.find(s=>s.id===S.activeSkillId); if(sk){sk.tests.push({input:'',expected:'',result:'',passed:false});saveState();sfRenderEditor();} }
+function sfSetTest(i,k,v) { const sk=S.skills.find(s=>s.id===S.activeSkillId); if(sk&&sk.tests[i]){sk.tests[i][k]=v;saveState();} }
+function sfRemoveTest(i) { const sk=S.skills.find(s=>s.id===S.activeSkillId); if(sk){sk.tests.splice(i,1);saveState();sfRenderEditor();} }
+function sfDelete() { if(!confirm('Delete skill?'))return; S.skills=S.skills.filter(s=>s.id!==S.activeSkillId); S.activeSkillId=S.skills[0]?.id||null; saveState(); sfRenderList(); sfRenderEditor(); }
+
+async function sfAiGenerate() {
+  const sk = S.skills.find(s => s.id === S.activeSkillId);
+  if (!sk?.description) { toast('Add a description first', 'var(--amb)'); return; }
+  const btn = $('sfGenBtn'); btn.disabled=true; btn.textContent='⏳';
+  try {
+    const content = await geminiText(
+      `Generate a SKILL.md file for a Claude skill with this description: "${sk.description}"\nTrigger: "${sk.trigger||'when relevant'}"\n\nInclude: overview, when to use, when NOT to use, step-by-step instructions, examples, quality checklist.\nReturn ONLY the markdown content.`,
+      { temperature:0.6 }
+    );
+    sk.content = content; saveState(); sfRenderEditor(); toast('✅ Skill generated');
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); }
+  finally { btn.disabled=false; btn.textContent='✨ AI Generate'; }
+}
+
+async function sfRunTests() {
+  const sk = S.skills.find(s => s.id === S.activeSkillId);
+  if (!sk?.tests?.length) { toast('Add test cases first', 'var(--amb)'); return; }
+  const btn = $('sfTestBtn'); btn.disabled=true; btn.textContent='⏳';
+  for (let i=0; i<sk.tests.length; i++) {
+    const t = sk.tests[i];
+    try {
+      const result = await geminiText(
+        `Skill: ${sk.content}\n\nTest input: "${t.input}"\nExpected behavior: "${t.expected}"\n\nDoes this skill handle this correctly? Answer YES or NO and explain in one sentence.`,
+        { temperature:0.3, maxTokens:200 }
+      );
+      t.passed = result.trim().toUpperCase().startsWith('YES');
+      t.result = result.trim().slice(0,120);
+    } catch(e) { t.passed=false; t.result='Error: '+e.message; }
+    saveState();
+  }
+  sfRenderEditor(); btn.disabled=false; btn.textContent='▶ Run Tests';
+  toast('✅ Tests complete');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DOC ATELIER
+// ═══════════════════════════════════════════════════════════
+function daNew() {
+  const doc = { id:uid(), name:'New Doc', type:'report', prompt:'', content:'', createdAt:now() };
+  S.docs.unshift(doc); S.activeDocId = doc.id;
+  saveState(); daRenderList(); daRenderEditor();
+}
+
+function daRenderList() {
+  const list = $('daList');
+  if (!S.docs.length) { list.innerHTML = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--dim)">No docs yet</div>'; return; }
+  list.innerHTML = '';
+  S.docs.forEach(doc => {
+    const el = document.createElement('div');
+    el.className = 'li' + (S.activeDocId === doc.id ? ' active' : '');
+    el.innerHTML = `<div style="font-size:11px;font-weight:500">${esc(doc.name)}</div><div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim)">${doc.type}</div>`;
+    el.onclick = () => { S.activeDocId = doc.id; daRenderList(); daRenderEditor(); };
+    list.appendChild(el);
+  });
+}
+
+function daRenderEditor() {
+  const editor = $('daEditor');
+  const doc = S.docs.find(d => d.id === S.activeDocId);
+  if (!doc) { editor.innerHTML = '<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Create a doc to start</div><button class="btn btn-acc mt-3" onclick="daNew()">New Doc</button></div>'; return; }
+  editor.innerHTML = `
+    <div class="mod-hdr flex-shrink-0">
+      <div>
+        <input class="inp" style="font-size:15px;font-weight:700;background:transparent;border-color:transparent;padding-left:0" value="${esc(doc.name)}" oninput="daPatch('name',this.value)">
+      </div>
+      <div class="flex gap-2">
+        <select class="inp" style="width:130px" onchange="daPatch('type',this.value)">
+          ${['report','spec','guide','email','proposal','readme','blog'].map(t=>`<option value="${t}" ${doc.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <button class="btn btn-acc btn-sm" onclick="daGenerate()" id="daGenBtn">✨ Generate</button>
+        <button class="btn btn-gh btn-sm" onclick="downloadText(S.docs.find(d=>d.id===S.activeDocId).name+'.md',S.docs.find(d=>d.id===S.activeDocId).content||'')">⬇ MD</button>
+        <button class="btn btn-rd btn-sm" onclick="daDelete()">✕</button>
+      </div>
+    </div>
+    <div class="flex flex-1 overflow-hidden">
+      <div style="width:260px;flex-shrink:0;border-right:1px solid var(--bdr);padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto" class="sh">
+        <div><div class="label">AI Prompt</div><textarea class="inp" rows="6" placeholder="Describe what to write…" oninput="daPatch('prompt',this.value)">${esc(doc.prompt)}</textarea></div>
+        <div><div class="label">Language</div>
+          <select class="inp" id="daLang"><option>English</option><option>Thai</option><option>Both</option></select>
+        </div>
+      </div>
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <div style="padding:6px 14px;font-size:8px;font-family:'Space Mono',monospace;color:var(--dim);border-bottom:1px solid var(--bdr);text-transform:uppercase">Content</div>
+        <textarea class="inp flex-1 sh" style="border:none;border-radius:0;padding:16px;font-size:13px;line-height:1.7;resize:none;font-family:'Inter',sans-serif" oninput="daPatch('content',this.value)">${esc(doc.content)}</textarea>
+      </div>
+    </div>`;
+}
+
+function daPatch(k,v) { const d=S.docs.find(x=>x.id===S.activeDocId); if(d){d[k]=v;saveState();} }
+function daDelete() { if(!confirm('Delete doc?'))return; S.docs=S.docs.filter(d=>d.id!==S.activeDocId); S.activeDocId=S.docs[0]?.id||null; saveState(); daRenderList(); daRenderEditor(); }
+
+async function daGenerate() {
+  const doc = S.docs.find(d => d.id === S.activeDocId);
+  if (!doc?.prompt) { toast('Add a prompt first', 'var(--amb)'); return; }
+  const btn = $('daGenBtn'); btn.disabled=true; btn.textContent='⏳';
+  const lang = $('daLang')?.value || 'English';
+  try {
+    const textarea = document.querySelector('#daEditor textarea');
+    if (textarea) textarea.value = '';
+    doc.content = '';
+    await geminiStream(
+      `Write a ${doc.type} in ${lang}:\n\n${doc.prompt}\n\nBe comprehensive and professional. Use markdown formatting.`,
+      {
+        onChunk: (full) => { doc.content=full; if(textarea) textarea.value=full; },
+        onDone: () => { saveState(); btn.disabled=false; btn.textContent='✨ Generate'; toast('✅ Doc generated'); }
+      }
+    );
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); btn.disabled=false; btn.textContent='✨ Generate'; }
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// CANVAS STUDIO
+// ═══════════════════════════════════════════════════════════
+const CV_COLORS = { default:'#00d8ff', start:'#00e676', end:'#ff4081', decision:'#ffab00' };
+let cvNodes = [
+  { id:'n1', label:'Start',    x:100, y:80,  color:'#00e676', type:'start'    },
+  { id:'n2', label:'Process',  x:280, y:80,  color:'#00d8ff', type:'default'  },
+  { id:'n3', label:'Decision', x:460, y:80,  color:'#ffab00', type:'decision' },
+  { id:'n4', label:'End',      x:340, y:220, color:'#ff4081', type:'end'      },
+];
+let cvEdges = [['n1','n2'],['n2','n3'],['n3','n4']];
+let cvSelected = null, cvLinking = false, cvDrag = null;
+let cvMerCounter = 0;
+
+function cvRender() {
+  const svg = $('cvSvg');
+  if (!svg) return;
+  const rect = svg.parentElement.getBoundingClientRect();
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+
+  // SVG content: edges + nodes
+  let edgeSvg = `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(0,216,255,0.5)"/></marker></defs>`;
+
+  cvEdges.forEach(([fid,tid]) => {
+    const fn = cvNodes.find(n=>n.id===fid), tn = cvNodes.find(n=>n.id===tid);
+    if (!fn||!tn) return;
+    const fx=fn.x+60, fy=fn.y+20, tx=tn.x+60, ty=tn.y+20, mx=(fx+tx)/2;
+    edgeSvg += `<path d="M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}" stroke="rgba(0,216,255,0.35)" stroke-width="2" fill="none" marker-end="url(#arr)"/>`;
+  });
+
+  // Remove old node elements
+  svg.querySelectorAll('.cv-node').forEach(n=>n.remove());
+  svg.innerHTML = edgeSvg;
+
+  cvNodes.forEach(n => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','cv-node');
+    g.style.cursor = 'grab';
+    const sel = cvSelected === n.id;
+    const stroke = sel ? n.color : n.color+'60';
+    const fill = n.color+'18';
+
+    if (n.type === 'decision') {
+      const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points', `${n.x+60},${n.y} ${n.x+120},${n.y+20} ${n.x+60},${n.y+40} ${n.x},${n.y+20}`);
+      poly.setAttribute('fill', fill); poly.setAttribute('stroke', stroke); poly.setAttribute('stroke-width', sel?2:1);
+      g.appendChild(poly);
+    } else if (n.type==='start'||n.type==='end') {
+      const el = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+      el.setAttribute('cx',n.x+60); el.setAttribute('cy',n.y+20); el.setAttribute('rx',55); el.setAttribute('ry',20);
+      el.setAttribute('fill',fill); el.setAttribute('stroke',stroke); el.setAttribute('stroke-width',sel?2:1);
+      g.appendChild(el);
+    } else {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x',n.x); rect.setAttribute('y',n.y); rect.setAttribute('width',120); rect.setAttribute('height',40);
+      rect.setAttribute('rx',8); rect.setAttribute('fill',fill); rect.setAttribute('stroke',stroke); rect.setAttribute('stroke-width',sel?2:1);
+      g.appendChild(rect);
+    }
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',n.x+60); txt.setAttribute('y',n.y+25);
+    txt.setAttribute('fill', sel ? n.color : '#d8eaf8'); txt.setAttribute('font-size','11');
+    txt.setAttribute('text-anchor','middle'); txt.setAttribute('font-family','Inter'); txt.setAttribute('font-weight','500');
+    txt.setAttribute('pointer-events','none');
+    txt.textContent = n.label;
+    g.appendChild(txt);
+
+    // Events
+    g.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      if (e.shiftKey) { if(confirm(`Delete "${n.label}"?`)) { cvNodes=cvNodes.filter(x=>x.id!==n.id); cvEdges=cvEdges.filter(([a,b])=>a!==n.id&&b!==n.id); cvSelected=null; cvRender(); cvHideProps(); } return; }
+      if (cvLinking) { if(cvLinking!==n.id){cvEdges.push([cvLinking,n.id]);} cvLinking=false; $('cvLinkBtn').textContent='🔗 Link'; cvRender(); return; }
+      cvSelected = n.id; cvRender(); cvShowProps(n);
+      const svgRect = $('cvSvg').getBoundingClientRect();
+      cvDrag = { id:n.id, ox:e.clientX-svgRect.left-n.x, oy:e.clientY-svgRect.top-n.y };
+    });
+    svg.appendChild(g);
+  });
+}
+
+function cvShowProps(n) {
+  const panel = $('cvProps');
+  panel.classList.remove('hidden');
+  $('cvPropLabel').value = n.label;
+  $('cvPropType').value = n.type;
+}
+function cvHideProps() { $('cvProps').classList.add('hidden'); }
+
+function cvUpdateSelectedLabel(v) {
+  const n = cvNodes.find(x=>x.id===cvSelected); if(n){n.label=v; cvRender();}
+}
+function cvUpdateSelectedType(v) {
+  const n = cvNodes.find(x=>x.id===cvSelected); if(n){n.type=v;n.color=CV_COLORS[v]||'#00d8ff'; cvRender();}
+}
+function cvAddNode() {
+  const colors = Object.values(CV_COLORS);
+  const n = { id:uid(), label:'Node', x:60+Math.random()*300, y:60+Math.random()*200, color:colors[cvNodes.length%colors.length], type:'default' };
+  cvNodes.push(n); cvRender();
+}
+function cvToggleLink() {
+  if (!cvSelected) { toast('Select a node first', 'var(--amb)'); return; }
+  cvLinking = cvLinking ? false : cvSelected;
+  $('cvLinkBtn').textContent = cvLinking ? '🔗 Click target…' : '🔗 Link';
+  $('cvLinkBtn').style.color = cvLinking ? 'var(--amb)' : '';
+}
+function cvDeleteSelected() {
+  if (!cvSelected) return;
+  cvNodes = cvNodes.filter(n=>n.id!==cvSelected);
+  cvEdges = cvEdges.filter(([a,b])=>a!==cvSelected&&b!==cvSelected);
+  cvSelected=null; cvRender(); cvHideProps();
+}
+function cvExport() { downloadJson('canvas.json',{nodes:cvNodes,edges:cvEdges}); }
+
+async function cvGenerate() {
+  const prompt = $('cvPrompt').value.trim();
+  if (!prompt) { toast('Enter a description', 'var(--amb)'); return; }
+  try {
+    const resp = await geminiText(
+      `Create a flowchart for: ${prompt}\n\nReturn ONLY JSON: {"nodes":[{"id":"n1","label":"text","x":100,"y":60,"color":"#00e676","type":"start"}],"edges":[["n1","n2"]]}\nTypes: start,end,decision,default. Colors: start=#00e676,end=#ff4081,decision=#ffab00,default=#00d8ff.\n5-8 nodes. x:50-600, y:40-400. No markdown.`,
+      { temperature:0.4 }
+    );
+    const data = JSON.parse(resp.replace(/```json|```/g,'').trim());
+    if (Array.isArray(data.nodes)) cvNodes = data.nodes;
+    if (Array.isArray(data.edges)) cvEdges = data.edges;
+    cvSelected=null; cvRender(); cvHideProps(); toast('✅ Diagram generated');
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); }
+}
+
+// Canvas mouse events
+document.addEventListener('DOMContentLoaded', () => {
+  const svg = $('cvSvg');
+  if (!svg) return;
+  document.addEventListener('mousemove', e => {
+    if (!cvDrag) return;
+    const r = svg.getBoundingClientRect();
+    const n = cvNodes.find(x=>x.id===cvDrag.id);
+    if (n) {
+      n.x = Math.max(0, Math.min(r.width-130, e.clientX-r.left-cvDrag.ox));
+      n.y = Math.max(0, Math.min(r.height-50, e.clientY-r.top-cvDrag.oy));
+      cvRender();
+    }
+  });
+  document.addEventListener('mouseup', () => { cvDrag=null; });
+  svg.addEventListener('click', e => { if(e.target===svg){cvSelected=null;cvLinking=false;$('cvLinkBtn').textContent='🔗 Link';cvRender();cvHideProps();} });
+  new ResizeObserver(() => cvRender()).observe(svg.parentElement);
+});
+
+// ═══════════════════════════════════════════════════════════
+// MERMAID EDITOR
+// ═══════════════════════════════════════════════════════════
+mermaid.initialize({ startOnLoad:false, theme:'dark', securityLevel:'loose' });
+let mmRenderCount = 0;
+let mmTimer = null;
+
+const MM_TEMPLATES = {
+  flowchart:`graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Process A]\n    B -->|No| D[Process B]\n    C --> E[End]\n    D --> E`,
+  sequence:`sequenceDiagram\n    participant User\n    participant API\n    participant DB\n    User->>API: Request\n    API->>DB: Query\n    DB-->>API: Data\n    API-->>User: Response`,
+  class:`classDiagram\n    class User {\n        +id: int\n        +name: string\n        +login()\n    }\n    class Order {\n        +orderId: int\n        +amount: float\n        +process()\n    }\n    User --> Order : creates`,
+  er:`erDiagram\n    USER ||--o{ ORDER : places\n    ORDER ||--|{ ITEM : contains\n    PRODUCT ||--o{ ITEM : included-in`,
+  gantt:`gantt\n    title Project 2024\n    dateFormat YYYY-MM-DD\n    section Planning\n    Analysis :a1, 2024-01-01, 7d\n    Design   :a2, after a1, 10d\n    section Build\n    Frontend :b1, after a2, 14d\n    Backend  :b2, after a2, 14d`,
+  pie:`pie title Tech Stack\n    "TypeScript" : 45\n    "React" : 30\n    "Node.js" : 20\n    "Other" : 5`,
+};
+
+function mmTemplate(t) { $('mmCode').value = MM_TEMPLATES[t] || ''; mmRender(); }
+function mmScheduleRender() { clearTimeout(mmTimer); mmTimer = setTimeout(mmRender, 600); }
+
+async function mmRender() {
+  const code = $('mmCode')?.value?.trim();
+  const preview = $('mmPreview');
+  const err = $('mmError');
+  if (!code || !preview) return;
+  mmRenderCount++;
+  const id = `mm-${mmRenderCount}`;
+  try {
+    const { svg } = await mermaid.render(id, code);
+    preview.innerHTML = svg;
+    if (err) { err.classList.add('hidden'); err.textContent=''; }
+  } catch(e) {
+    preview.innerHTML = '';
+    if (err) { err.classList.remove('hidden'); err.textContent = 'Error: ' + e.message; }
+  }
+}
+
+async function mmAiGenerate() {
+  const prompt = $('mmPrompt').value.trim();
+  if (!prompt) return;
+  const btn = $('mmAiBtn'); btn.disabled=true; btn.textContent='⏳';
+  try {
+    const resp = await geminiText(
+      `Generate a Mermaid diagram for: ${prompt}\n\nReturn ONLY the Mermaid code. No markdown fences, no explanation.`,
+      { temperature:0.5 }
+    );
+    $('mmCode').value = resp.replace(/```mermaid|```/g,'').trim();
+    await mmRender(); toast('✅ Diagram generated');
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); }
+  finally { btn.disabled=false; btn.textContent='✨'; }
+}
+
+function mmDownload() {
+  const code = $('mmCode')?.value?.trim();
+  if (code) downloadText('diagram.mmd', code);
+}
+
+// ═══════════════════════════════════════════════════════════
+// WHITEBOARD
+// ═══════════════════════════════════════════════════════════
+let wbCtx, wbDrawing=false, wbTool='pen', wbColor='#00d8ff', wbSize=3, wbHistory=[];
+
+const WB_TOOLS = [
+  { id:'pen', icon:'✏️', label:'Pen' },
+  { id:'line', icon:'📏', label:'Line' },
+  { id:'rect', icon:'⬜', label:'Rect' },
+  { id:'circle', icon:'⭕', label:'Circle' },
+  { id:'eraser', icon:'🧹', label:'Eraser' },
+];
+const WB_COLORS = ['#00d8ff','#7c4dff','#00e676','#ff1744','#ffab00','#ff80ab','#ffffff','#7a99b8'];
+
+function wbInit() {
+  const canvas = $('wb-canvas');
+  if (!canvas || canvas._inited) return;
+  canvas._inited = true;
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
+  wbCtx = canvas.getContext('2d');
+  wbCtx.fillStyle = '#070c12'; wbCtx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Build tools UI
+  const toolsEl = $('wbTools');
+  WB_TOOLS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-gh btn-xs'; btn.id = 'wbt-'+t.id;
+    btn.textContent = t.icon+' '+t.label;
+    btn.onclick = () => { wbTool=t.id; document.querySelectorAll('[id^="wbt-"]').forEach(b=>b.style.borderColor=''); btn.style.borderColor='var(--acc)'; };
+    toolsEl.appendChild(btn);
+  });
+  const defaultToolBtn = $('wbt-pen');
+  if (defaultToolBtn) defaultToolBtn.style.borderColor='var(--acc)';
+
+  // Build colors UI
+  const colorsEl = $('wbColors');
+  WB_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.style.cssText = `width:20px;height:20px;border-radius:50%;background:${c};border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0`;
+    btn.onclick = () => { wbColor=c; document.querySelectorAll('#wbColors button').forEach(b=>b.style.borderColor='transparent'); btn.style.borderColor='#fff'; };
+    colorsEl.appendChild(btn);
+  });
+  colorsEl.firstChild.style.borderColor='#fff';
+
+  $('wbSize').oninput = function(){ wbSize=parseInt(this.value); $('wbSizeLabel').textContent=this.value+'px'; };
+
+  let startX, startY, snap;
+  canvas.onmousedown = e => {
+    wbDrawing=true; const r=canvas.getBoundingClientRect();
+    startX=e.clientX-r.left; startY=e.clientY-r.top;
+    if (wbTool==='pen'||wbTool==='eraser') {
+      wbCtx.beginPath(); wbCtx.moveTo(startX,startY);
+    } else {
+      snap = wbCtx.getImageData(0,0,canvas.width,canvas.height);
+    }
+  };
+  canvas.onmousemove = e => {
+    if (!wbDrawing) return;
+    const r=canvas.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    if (wbTool==='pen') {
+      wbCtx.lineTo(x,y); wbCtx.strokeStyle=wbColor; wbCtx.lineWidth=wbSize; wbCtx.lineCap='round'; wbCtx.lineJoin='round'; wbCtx.stroke();
+    } else if (wbTool==='eraser') {
+      wbCtx.lineTo(x,y); wbCtx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#070c12'; wbCtx.lineWidth=wbSize*4; wbCtx.lineCap='round'; wbCtx.stroke();
+    } else if (snap) {
+      wbCtx.putImageData(snap,0,0);
+      wbCtx.strokeStyle=wbColor; wbCtx.lineWidth=wbSize;
+      if (wbTool==='line'){ wbCtx.beginPath(); wbCtx.moveTo(startX,startY); wbCtx.lineTo(x,y); wbCtx.stroke(); }
+      else if (wbTool==='rect'){ wbCtx.strokeRect(startX,startY,x-startX,y-startY); }
+      else if (wbTool==='circle'){ const rx=Math.abs(x-startX)/2, ry=Math.abs(y-startY)/2; wbCtx.beginPath(); wbCtx.ellipse(startX+(x-startX)/2, startY+(y-startY)/2, rx, ry, 0, 0, Math.PI*2); wbCtx.stroke(); }
+    }
+  };
+  canvas.onmouseup = () => { if(wbDrawing){wbHistory.push(wbCtx.getImageData(0,0,canvas.width,canvas.height)); wbDrawing=false;} };
+  canvas.onmouseleave = () => { wbDrawing=false; };
+  new ResizeObserver(()=>{ const im=wbCtx.getImageData(0,0,canvas.width,canvas.height); canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight; wbCtx.putImageData(im,0,0); }).observe(wrap);
+}
+
+function wbUndo() {
+  if (wbHistory.length > 1) { wbHistory.pop(); wbCtx.putImageData(wbHistory[wbHistory.length-1],0,0); }
+  else if (wbHistory.length===1) { wbHistory.pop(); const c=$('wb-canvas'); wbCtx.fillStyle='#070c12'; wbCtx.fillRect(0,0,c.width,c.height); }
+}
+function wbClear() { const c=$('wb-canvas'); if(c&&wbCtx){wbCtx.fillStyle='#070c12';wbCtx.fillRect(0,0,c.width,c.height);wbHistory=[];} }
+function wbSave() {
+  const c=$('wb-canvas'); if(!c)return;
+  const a=document.createElement('a'); a.download='whiteboard.png'; a.href=c.toDataURL('image/png'); a.click();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRESENTATION
+// ═══════════════════════════════════════════════════════════
+const PRES_THEMES = [
+  { bg:'linear-gradient(135deg,#0e1520,#070c12)', title:'#00d8ff', body:'#7a99b8' },
+  { bg:'linear-gradient(135deg,#1a0a2e,#0e0518)', title:'#a480ff', body:'#8a6ab8' },
+  { bg:'linear-gradient(135deg,#2d0a0a,#1a0505)', title:'#ff4d4d', body:'#b87a7a' },
+  { bg:'linear-gradient(135deg,#071a0a,#010a05)', title:'#00e676', body:'#78b482' },
+  { bg:'linear-gradient(135deg,#1a1200,#0f0a01)', title:'#c9a227', body:'#8a7040' },
+];
+let presActiveSlideIdx = 0;
+
+function presInit() {
+  if (!S.presSlides.length) {
+    S.presSlides = [
+      { id:uid(), title:'Welcome to WhisperX', body:'AI-powered presentation generator.\n\n• Build decks with Gemini AI\n• Export-ready slides\n• 5 dark themes', notes:'Introduction slide', theme:0 },
+      { id:uid(), title:'Key Features', body:'✦ Ghost Team — 9 AI Agents\n✦ Vision Pipeline — 7 stages\n✦ Builder Studio — PS1 generator\n✦ Canvas, Mermaid, Whiteboard', notes:'Features overview', theme:1 },
+    ];
+    saveState();
+  }
+  presRender();
+}
+
+function presRender() {
+  presRenderList();
+  presShowSlide(presActiveSlideIdx);
+}
+
+function presRenderList() {
+  const list = $('presSlideList');
+  list.innerHTML = '';
+  S.presSlides.forEach((slide, i) => {
+    const el = document.createElement('div');
+    el.className = 'li' + (i===presActiveSlideIdx?' active':'');
+    el.innerHTML = `<div style="font-size:10px;font-weight:600">${i+1}. ${esc(slide.title.slice(0,24))}</div>`;
+    el.onclick = () => { presActiveSlideIdx=i; presRenderList(); presShowSlide(i); };
+    list.appendChild(el);
+  });
+}
+
+function presShowSlide(i) {
+  const slide = S.presSlides[i];
+  if (!slide) return;
+  const theme = PRES_THEMES[slide.theme||0];
+  const wrap = $('presSlidePreview');
+  if (wrap) {
+    wrap.style.background = theme.bg;
+    $('presSlideTitle').style.color = theme.title;
+    $('presSlideBody').style.color = theme.body;
+    $('presSlideTitle').textContent = slide.title;
+    $('presSlideBody').style.whiteSpace='pre-wrap';
+    $('presSlideBody').textContent = slide.body;
+  }
+  $('presTitle').value = slide.title;
+  $('presBody').value = slide.body;
+  $('presNotes').value = slide.notes||'';
+  $('presTheme').value = slide.theme||0;
+}
+
+function presUpdateSlide() {
+  const slide = S.presSlides[presActiveSlideIdx];
+  if (!slide) return;
+  slide.title = $('presTitle').value;
+  slide.body = $('presBody').value;
+  slide.notes = $('presNotes').value;
+  slide.theme = parseInt($('presTheme').value);
+  presShowSlide(presActiveSlideIdx);
+  presRenderList();
+  saveState();
+}
+
+function presAddSlide() {
+  S.presSlides.push({ id:uid(), title:'New Slide', body:'', notes:'', theme:0 });
+  presActiveSlideIdx = S.presSlides.length-1;
+  saveState(); presRender();
+}
+
+function presDeleteSlide() {
+  if (S.presSlides.length <= 1) return;
+  S.presSlides.splice(presActiveSlideIdx, 1);
+  presActiveSlideIdx = Math.max(0, presActiveSlideIdx-1);
+  saveState(); presRender();
+}
+
+async function presAiGenerate() {
+  const prompt = $('presAiPrompt').value.trim();
+  if (!prompt) { toast('Enter a deck description', 'var(--amb)'); return; }
+  const btn = $('presAiBtn'); btn.disabled=true; btn.textContent='⏳';
+  try {
+    const resp = await geminiText(
+      `Create a professional presentation deck for: "${prompt}"\n\nReturn ONLY JSON array: [{"title":"Slide Title","body":"content line 1\\nline 2\\nline 3","notes":"speaker note","theme":0}]\n6-8 slides. Use \\n for line breaks. theme is 0-4. No markdown fences.`,
+      { temperature:0.6, maxTokens:3000 }
+    );
+    const slides = JSON.parse(resp.replace(/```json|```/g,'').trim());
+    if (!Array.isArray(slides)) throw new Error('Invalid response');
+    S.presSlides = slides.map(s=>({...s,id:uid()}));
+    presActiveSlideIdx=0; saveState(); presRender();
+    toast('✅ Deck generated: '+slides.length+' slides');
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); }
+  finally { btn.disabled=false; btn.textContent='✨ Generate Deck'; }
+}
+
+function presPresent() {
+  const slide = S.presSlides[presActiveSlideIdx];
+  const theme = PRES_THEMES[slide?.theme||0];
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    body{margin:0;background:${theme.bg.includes('gradient')?'#070c12':theme.bg};font-family:Outfit,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh}
+    .slide{background:${theme.bg};padding:80px;border-radius:20px;max-width:900px;width:90%}
+    h1{color:${theme.title};font-size:48px;margin-bottom:24px}
+    p{color:${theme.body};font-size:24px;line-height:1.7;white-space:pre-wrap}
+  </style></head><body><div class="slide"><h1>${esc(slide?.title||'')}</h1><p>${esc(slide?.body||'')}</p></div></body></html>`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════
+let chartInstance = null;
+let chartDatasets = [];
+
+function chartInit() {
+  if (!chartDatasets.length) {
+    chartDatasets = [
+      { label:'Dataset A', data:[65,59,80,81,56,72], color:'#00d8ff' },
+      { label:'Dataset B', data:[28,48,40,19,86,27], color:'#7c4dff' },
+    ];
+  }
+  chartRenderDatasetsUI();
+  chartRender();
+}
+
+function chartRenderDatasetsUI() {
+  const list = $('chartDatasetList');
+  list.innerHTML = chartDatasets.map((d,i) => `
+    <div class="panel-i p-2 mb-2 flex gap-2 items-center">
+      <input type="color" value="${d.color}" onchange="chartDatasets[${i}].color=this.value;chartRender()" style="width:28px;height:28px;border:none;background:none;cursor:pointer;border-radius:4px">
+      <input class="inp" style="flex:1;font-size:11px" value="${esc(d.label)}" oninput="chartDatasets[${i}].label=this.value;chartRender()">
+      <input class="inp" style="flex:2;font-size:10px" value="${d.data.join(',')}" oninput="chartDatasets[${i}].data=this.value.split(',').map(n=>parseFloat(n)||0);chartRender()">
+      <button class="btn btn-rd btn-xs" onclick="chartDatasets.splice(${i},1);chartRenderDatasetsUI();chartRender()">✕</button>
+    </div>`).join('');
+}
+
+function chartAddDataset() {
+  const colors = ['#00d8ff','#7c4dff','#00e676','#ff1744','#ffab00'];
+  chartDatasets.push({ label:`Dataset ${chartDatasets.length+1}`, data:[30,50,45,60,40,55], color:colors[chartDatasets.length%colors.length] });
+  chartRenderDatasetsUI(); chartRender();
+}
+
+function chartRender() {
+  const canvas = $('chartCanvas');
+  if (!canvas) return;
+  if (chartInstance) { chartInstance.destroy(); chartInstance=null; }
+  const type = $('chartType')?.value || 'bar';
+  const labels = ($('chartLabels')?.value||'Jan,Feb,Mar,Apr,May,Jun').split(',').map(s=>s.trim());
+  chartInstance = new Chart(canvas, {
+    type,
+    data: {
+      labels,
+      datasets: chartDatasets.map(d => ({
+        label:d.label, data:d.data,
+        backgroundColor: type==='line' ? d.color+'22' : chartDatasets.length>1 ? d.color+'cc' : chartDatasets[0].data.map((_,i)=>`hsl(${(i*360/d.data.length)},70%,60%)`),
+        borderColor: d.color, borderWidth:2, fill: type==='line', tension:0.4,
+        pointBackgroundColor: d.color, pointRadius:4,
+      })),
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ labels:{ color:'#7a99b8', font:{size:11,family:'Space Mono'} } } },
+      scales: ['bar','line','radar'].includes(type) ? {
+        x:{ ticks:{color:'#7a99b8',font:{size:10}}, grid:{color:'rgba(30,48,72,0.5)'} },
+        y:{ ticks:{color:'#7a99b8',font:{size:10}}, grid:{color:'rgba(30,48,72,0.5)'} },
+      } : {},
+    }
+  });
+}
+
+async function chartAiGenerate() {
+  const prompt = $('chartPrompt')?.value?.trim();
+  if (!prompt) { toast('Enter a data description', 'var(--amb)'); return; }
+  const btn = $('chartAiBtn'); btn.disabled=true; btn.textContent='⏳';
+  try {
+    const resp = await geminiText(
+      `Generate chart data for: "${prompt}"\n\nReturn ONLY JSON: {"labels":["L1","L2","L3","L4","L5","L6"],"datasets":[{"label":"Name","data":[10,20,30,25,15,35],"color":"#00d8ff"}]}\n2-3 datasets max, 6-8 labels. No markdown.`,
+      { temperature:0.5 }
+    );
+    const data = JSON.parse(resp.replace(/```json|```/g,'').trim());
+    if (data.labels) $('chartLabels').value = data.labels.join(',');
+    if (Array.isArray(data.datasets)) { chartDatasets=data.datasets; chartRenderDatasetsUI(); }
+    chartRender(); toast('✅ Chart data generated');
+  } catch(e) { toast('❌ '+e.message,'var(--red)'); }
+  finally { btn.disabled=false; btn.textContent='✨ AI Data'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TASKS (KANBAN)
+// ═══════════════════════════════════════════════════════════
+let taskEditId = null;
+let taskDragId = null;
+const TASK_COLS = ['todo','inprogress','review','done'];
+const PRIORITY_COLOR = { low:'var(--muted)', medium:'var(--acc)', high:'var(--amb)', critical:'var(--red)' };
+
+function taskRender() {
+  TASK_COLS.forEach(col => {
+    const zone = $('drop-'+col);
+    if (!zone) return;
+    zone.innerHTML = '';
+    S.tasks.filter(t=>t.status===col).forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.draggable = true;
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-1">
+          <span style="font-size:12px;font-weight:600">${esc(t.title)}</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:${PRIORITY_COLOR[t.priority]||'var(--muted)'};flex-shrink:0"></span>
+        </div>
+        ${t.desc ? `<div style="font-size:10px;color:var(--muted);line-height:1.5">${esc(t.desc.slice(0,80))}${t.desc.length>80?'…':''}</div>` : ''}
+        <div class="flex items-center justify-between mt-2">
+          <span class="badge badge-w" style="font-size:8px">${t.priority}</span>
+          <button class="btn btn-gh btn-xs" onclick="event.stopPropagation();taskEdit('${t.id}')">✏️</button>
+        </div>`;
+      card.ondragstart = e => { taskDragId=t.id; card.classList.add('dragging'); };
+      card.ondragend = () => card.classList.remove('dragging');
+      card.ondblclick = () => taskEdit(t.id);
+      zone.appendChild(card);
+    });
+  });
+}
+
+function taskNew(status='todo') {
+  taskEditId = null;
+  $('taskTitle').value=''; $('taskDesc').value=''; $('taskStatus').value=status; $('taskPriority').value='medium';
+  $('taskDeleteBtn').classList.add('hidden');
+  $('taskModal').classList.remove('hidden');
+  setTimeout(()=>$('taskTitle').focus(),100);
+}
+function taskEdit(id) {
+  const t = S.tasks.find(x=>x.id===id); if(!t)return;
+  taskEditId=id;
+  $('taskTitle').value=t.title; $('taskDesc').value=t.desc||''; $('taskStatus').value=t.status; $('taskPriority').value=t.priority;
+  $('taskDeleteBtn').classList.remove('hidden');
+  $('taskModal').classList.remove('hidden');
+}
+function taskSave() {
+  const title=$('taskTitle').value.trim(); if(!title){toast('Add a title','var(--amb)');return;}
+  if (taskEditId) {
+    const t=S.tasks.find(x=>x.id===taskEditId);
+    if(t){t.title=title;t.desc=$('taskDesc').value;t.status=$('taskStatus').value;t.priority=$('taskPriority').value;}
+  } else {
+    S.tasks.push({ id:uid(), title, desc:$('taskDesc').value, status:$('taskStatus').value, priority:$('taskPriority').value, createdAt:now() });
+  }
+  saveState(); closeTaskModal(); taskRender();
+}
+function taskDelete() {
+  if(!taskEditId)return; S.tasks=S.tasks.filter(t=>t.id!==taskEditId); saveState(); closeTaskModal(); taskRender();
+}
+function closeTaskModal() { $('taskModal').classList.add('hidden'); taskEditId=null; }
+
+function taskDragOver(e, col) { e.preventDefault(); $('drop-'+col).classList.add('drag-over'); }
+function taskDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function taskDrop(e, col) {
+  e.preventDefault(); $('drop-'+col).classList.remove('drag-over');
+  if (!taskDragId) return;
+  const t=S.tasks.find(x=>x.id===taskDragId); if(t){t.status=col; saveState(); taskRender();}
+  taskDragId=null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GALLERY
+// ═══════════════════════════════════════════════════════════
+const GAL_TYPE_ICONS = { prompt:'💬', output:'📤', code:'💻', diagram:'📊', note:'📝' };
+const GAL_TYPE_COLORS = { prompt:'var(--acc)', output:'var(--grn)', code:'#7dd3fc', diagram:'var(--amb)', note:'#ff80ab' };
+let galleryEditId = null;
+
+function galleryRender() {
+  const grid = $('galleryGrid');
+  const search = $('gallerySearch')?.value?.toLowerCase()||'';
+  const items = S.gallery.filter(it => it.title.toLowerCase().includes(search)||(it.content||'').toLowerCase().includes(search));
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">${S.gallery.length?'🔍':'🖼'}</div><div class="empty-text">${S.gallery.length?'No results':'Gallery is empty'}</div><div class="empty-sub">Add items with the + button</div></div>`;
+    return;
+  }
+  grid.innerHTML = items.map((it,i) => `
+    <div class="gallery-card">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span>${GAL_TYPE_ICONS[it.type]||'📄'}</span>
+          <span style="font-size:12px;font-weight:600">${esc(it.title)}</span>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn btn-gh btn-xs" onclick="galCopy(${i})" title="Copy">📋</button>
+          <button class="btn btn-gh btn-xs" onclick="galEdit(${i})" title="Edit">✏️</button>
+          <button class="btn btn-rd btn-xs" onclick="galDelete(${i})" title="Delete">✕</button>
+        </div>
+      </div>
+      <div style="font-size:9px;font-family:'Space Mono',monospace;color:${GAL_TYPE_COLORS[it.type]||'var(--muted)'};text-transform:uppercase;margin-bottom:6px">${it.type}</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;max-height:72px;overflow:hidden">${esc((it.content||'').slice(0,180))}${(it.content||'').length>180?'…':''}</div>
+      <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--dim);margin-top:8px">${new Date(it.date||0).toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'})}</div>
+    </div>`).join('');
+}
+
+function galleryNew() {
+  galleryEditId=null;
+  $('galTitle').value=''; $('galType').value='prompt'; $('galContent').value='';
+  $('galleryModal').classList.remove('hidden');
+  setTimeout(()=>$('galTitle').focus(),100);
+}
+function galEdit(i) {
+  const item = S.gallery.filter(it=>it.title.toLowerCase().includes($('gallerySearch').value.toLowerCase()))[i];
+  if (!item) return;
+  galleryEditId = item.id;
+  $('galTitle').value=item.title; $('galType').value=item.type; $('galContent').value=item.content||'';
+  $('galleryModal').classList.remove('hidden');
+}
+function galSave() {
+  const title=$('galTitle').value.trim(); if(!title){toast('Add a title','var(--amb)');return;}
+  if (galleryEditId) {
+    const it=S.gallery.find(x=>x.id===galleryEditId);
+    if(it){it.title=title;it.type=$('galType').value;it.content=$('galContent').value;}
+  } else {
+    S.gallery.unshift({ id:uid(), title, type:$('galType').value, content:$('galContent').value, date:now(), favorite:false, pinned:false });
+  }
+  saveState(); closeGalleryModal(); galleryRender();
+}
+function galDelete(i) {
+  const item = S.gallery.filter(it=>it.title.toLowerCase().includes($('gallerySearch').value.toLowerCase()))[i];
+  if (item) { S.gallery=S.gallery.filter(x=>x.id!==item.id); saveState(); galleryRender(); }
+}
+function galCopy(i) {
+  const item = S.gallery.filter(it=>it.title.toLowerCase().includes($('gallerySearch').value.toLowerCase()))[i];
+  if (item) navigator.clipboard.writeText(item.content||'').then(()=>toast('✅ Copied'));
+}
+function closeGalleryModal() { $('galleryModal').classList.add('hidden'); galleryEditId=null; }
+function galleryExport() { downloadJson('gallery.json', S.gallery); }
+
+// ═══════════════════════════════════════════════════════════
+// GITHUB AI
+// ═══════════════════════════════════════════════════════════
+async function ghFetch() {
+  const repo = $('ghRepo').value.trim(); if(!repo)return;
+  $('ghInfo').innerHTML = '<div style="font-size:11px;color:var(--muted)">Loading…</div>';
+  const token = $('ghToken').value.trim();
+  const headers = token ? { Authorization:`Bearer ${token}` } : {};
+  try {
+    const r = await fetch(`https://api.github.com/repos/${repo}`,{headers});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    $('ghInfo').innerHTML = `
+      <div class="panel-i p-3" style="font-size:12px">
+        <div style="font-weight:700;margin-bottom:6px">${d.full_name}</div>
+        <div style="color:var(--muted);font-size:11px;margin-bottom:8px">${d.description||''}</div>
+        <div class="flex gap-4" style="flex-wrap:wrap;font-size:10px;font-family:'Space Mono',monospace">
+          <span>⭐ ${(d.stargazers_count||0).toLocaleString()}</span>
+          <span>🍴 ${(d.forks_count||0).toLocaleString()}</span>
+          <span>🐛 ${(d.open_issues_count||0).toLocaleString()}</span>
+          <span style="color:var(--acc)">🔤 ${d.language||'N/A'}</span>
+        </div>
+        ${d.topics?.length ? `<div class="flex gap-1 mt-2" style="flex-wrap:wrap">${d.topics.map(t=>`<span class="badge badge-v" style="font-size:8px">${t}</span>`).join('')}</div>` : ''}
+      </div>`;
+    toast('✅ Repo loaded');
+  } catch(e) { $('ghInfo').innerHTML=`<div style="color:var(--red);font-size:11px">❌ ${e.message}</div>`; }
+}
+
+async function ghReview(type) {
+  const code=$('ghCode').value.trim(); if(!code){toast('Paste code first','var(--amb)');return;}
+  const prompts = {
+    review:`You are a Senior Developer. Review this code:\n\n${code}\n\n1. Code Quality 2. Bugs found 3. Improvements 4. Score /10`,
+    security:`You are a Security Expert. Audit this code for vulnerabilities:\n\n${code}\n\n1. Critical Issues 2. Medium Risk 3. Good Practices 4. Recommendations`,
+    optimize:`You are a Performance Engineer. Optimize this code:\n\n${code}\n\n1. Performance Issues 2. Refactoring 3. Optimized Version 4. Expected Gains`,
+  };
+  const out = $('ghResult'); out.textContent='⏳ Analyzing…';
+  await geminiStream(prompts[type], {
+    onChunk:(full)=>{out.textContent=full;},
+    onDone:()=>{toast('✅ Analysis complete');},
+    onError:(e)=>{out.textContent='❌ '+e.message;out.style.color='var(--red)';}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// THEME LAB
+// ═══════════════════════════════════════════════════════════
+function themeLabRender() {
+  const grid = $('themeGrid');
+  grid.innerHTML = '';
+  Object.entries(THEMES).forEach(([id,t]) => {
+    const el = document.createElement('div');
+    el.className = 'theme-swatch' + (S.theme===id ? ' sel' : '');
+    el.style.borderColor = S.theme===id ? t.acc : 'transparent';
+    el.innerHTML = `
+      <div class="flex items-center gap-2 mb-2">
+        <div style="width:16px;height:16px;border-radius:50%;background:${t.acc};box-shadow:0 0 8px ${t.acc}66"></div>
+        <span style="font-size:12px;font-weight:600">${t.name}</span>
+        <span>${t.emoji}</span>
+      </div>
+      <div class="flex gap-1 mb-2">
+        ${[t.bg,t.bg2,t.acc,t.pur,t.txt].map(c=>`<div style="width:18px;height:18px;border-radius:4px;background:${c};border:1px solid rgba(255,255,255,0.1)"></div>`).join('')}
+      </div>
+      <div style="font-size:9px;font-family:'Space Mono',monospace;color:${t.muted}">${id}</div>`;
+    el.onclick = () => { applyTheme(id); themeLabRender(); toast(`✅ Theme: ${t.name}`); };
+    grid.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════
+function settingsRender() {
+  const sel = $('settingsModel');
+  if (sel) {
+    sel.innerHTML = GEMINI_MODELS.map(m=>`<option value="${m.id}" ${S.geminiModel===m.id?'selected':''}>${m.label}</option>`).join('');
+    sel.onchange = () => { S.geminiModel=sel.value; saveState(); updateKeyStatus(); };
+  }
+  const key = sessionStorage.getItem('wx_gemini_key')||'';
+  $('settingsKeyDisplay').textContent = key ? `${key.slice(0,8)}…${key.slice(-4)} ✓` : 'Not configured';
+  const sw = $('thinkingSwitch');
+  if (sw) {
+    sw.className = 'sw ' + (S.thinkingEnabled ? 'sw-on' : 'sw-off');
+    sw.innerHTML = '<div class="sw-knob"></div>';
+    $('thinkingBudgetUI').classList.toggle('hidden', !S.thinkingEnabled);
+    $('budgetRange').value = S.thinkingBudget;
+    $('budgetDisplay').textContent = S.thinkingBudget;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  applyTheme(S.theme || 'midnight-galaxy');
+
+  // Build agent bar
+  gtBuildBar();
+
+  // Populate model selectors
+  const keyModelSel = $('keyModel');
+  if (keyModelSel) {
+    GEMINI_MODELS.forEach(m => {
+      const opt=document.createElement('option'); opt.value=m.id; opt.textContent=m.label; keyModelSel.appendChild(opt);
+    });
+    keyModelSel.value = S.geminiModel;
+  }
+
+  // Restore chat messages
+  const msgs = $('chatMessages');
+  if (msgs && S.messages.length) {
+    msgs.innerHTML='';
+    S.messages.forEach(m => msgs.appendChild(gtBuildMsgEl(m.role, m.content, m.agentId, m.thinking)));
+    msgs.scrollTop = msgs.scrollHeight;
+    const msgCount = $('gt-msgcount');
+    if (msgCount) msgCount.textContent = `${S.messages.length} messages`;
+  }
+
+  updateKeyStatus();
+
+  // Render initial modules
+  cvRender();
+  taskRender();
+  galleryRender();
+
+  // BS list
+  bsRenderLockspecList();
+  bsRenderEditor();
+  sfRenderList();
+  sfRenderEditor();
+  daRenderList();
+  daRenderEditor();
+  vpRenderSessionList();
+  vpRenderStageTrack();
+
+  // Mermaid auto-render
+  setTimeout(mmRender, 500);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      $('keyModal')?.classList.add('hidden');
+      $('taskModal')?.classList.add('hidden');
+      $('galleryModal')?.classList.add('hidden');
+    }
+  });
+
+  // Resize handlers
+  const cvSvg = $('cvSvg');
+  if (cvSvg) new ResizeObserver(cvRender).observe(cvSvg.parentElement);
+
+  // Persist chart datasets
+  window.addEventListener('beforeunload', () => {
+    S.chartDatasets = chartDatasets;
+    saveState();
+  });
+
+  console.log('%c⚡ WhisperX Builder MAX v2.0 loaded', 'color:#00d8ff;font-weight:bold;font-size:14px');
+  console.log('%c15 modules · 9 agents · Gemini AI', 'color:#7c4dff;font-size:11px');
+});
+</script>
+
+</body>
 </html>

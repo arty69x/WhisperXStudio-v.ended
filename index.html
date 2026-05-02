@@ -2318,7 +2318,8 @@ function wbInit() {
     btn.onclick = () => { wbTool=t.id; document.querySelectorAll('[id^="wbt-"]').forEach(b=>b.style.borderColor=''); btn.style.borderColor='var(--acc)'; };
     toolsEl.appendChild(btn);
   });
-  $('wbt-pen').style.borderColor='var(--acc)';
+  const defaultToolBtn = $('wbt-pen');
+  if (defaultToolBtn) defaultToolBtn.style.borderColor='var(--acc)';
 
   // Build colors UI
   const colorsEl = $('wbColors');
@@ -2816,11 +2817,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Restore chat messages
   const msgs = $('chatMessages');
-  if (S.messages.length) {
+  if (msgs && S.messages.length) {
     msgs.innerHTML='';
     S.messages.forEach(m => msgs.appendChild(gtBuildMsgEl(m.role, m.content, m.agentId, m.thinking)));
     msgs.scrollTop = msgs.scrollHeight;
-    $('gt-msgcount').textContent = `${S.messages.length} messages`;
+    const msgCount = $('gt-msgcount');
+    if (msgCount) msgCount.textContent = `${S.messages.length} messages`;
   }
 
   updateKeyStatus();
@@ -2846,9 +2848,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      $('keyModal').classList.add('hidden');
-      $('taskModal').classList.add('hidden');
-      $('galleryModal').classList.add('hidden');
+      $('keyModal')?.classList.add('hidden');
+      $('taskModal')?.classList.add('hidden');
+      $('galleryModal')?.classList.add('hidden');
     }
   });
 

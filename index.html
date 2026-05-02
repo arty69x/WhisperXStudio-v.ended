@@ -1234,8 +1234,6 @@ async function geminiText(prompt, { model, temperature=0.7, maxTokens=8192, thin
     contents:[{ role:'user', parts }],
     generationConfig:{ temperature, maxOutputTokens:maxTokens },
   };
-  if (system) body.systemInstruction = { parts:[{ text:system }]};
-  if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
   let lastErr = null;
   for (const base of GEMINI_API_BASES) {
     try {
@@ -1248,18 +1246,6 @@ async function geminiText(prompt, { model, temperature=0.7, maxTokens=8192, thin
     } catch (e) { lastErr = e; }
   }
   throw lastErr || new Error('Gemini API request failed.');
-}
-
-async function geminiStream(prompt, { model, temperature=0.7, maxTokens=8192, thinkingBudget, system, onChunk, onThinking, onDone, onError } = {}) {
-  try {
-    const key = getKey();
-    const m = model || S.geminiModel;
-    const body = {
-      contents:[{ role:'user', parts:[{ text:prompt }]}],
-      generationConfig:{ temperature, maxOutputTokens:maxTokens },
-    };
-    if (system) body.systemInstruction = { parts:[{ text:system }]};
-    if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
     let full='', thinking='', lastErr = null;
     for (const base of GEMINI_API_BASES) {
       try {
@@ -1291,6 +1277,29 @@ async function geminiStream(prompt, { model, temperature=0.7, maxTokens=8192, th
           if(done) {
             if (buf.trim()) processSseEvent(buf.trim());
             break;
+          }
+          buf += dec.decode(value, {stream:true});
+          const events = buf.split('\n\n');
+          buf = events.pop() || '';
+          for (const eventText of events) {
+            processSseEvent(eventText);
+        }
+        if(onDone) onDone(full, thinking);
+        return;
+      catch (e) { lastErr = e; }
+    throw lastErr || new Error('Gemini stream failed.');
+      if(done) break;
+      buf += dec.decode(value, {stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const j = JSON.parse(raw);
+          for (const part of (j?.candidates?.[0]?.content?.parts || [])) {
+            if (part.thought) { thinking += part.text||''; if(onThinking) onThinking(thinking); }
+            else { full += part.text||''; if(onChunk) onChunk(full); }
           }
           buf += dec.decode(value, {stream:true});
           const events = buf.split('\n\n');

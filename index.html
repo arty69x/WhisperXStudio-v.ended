@@ -1121,7 +1121,7 @@ function toast(msg, color='var(--grn)') {
 
 // ─── STATE ────────────────────────────────────────────────
 const DEFAULTS = {
-  geminiModel:'gemini-2.0-flash',
+  geminiModel:'gemini-2.5-flash',
   thinkingEnabled:false,
   thinkingBudget:1024,
   theme:'midnight-galaxy',
@@ -1157,30 +1157,33 @@ function loadState() {
       PERSIST_KEYS.forEach(k => { if (obj[k] !== undefined) S[k] = obj[k]; });
     }
   } catch(e) {}
+  S.geminiModel = (S.geminiModel === 'gemini-2.5-flash-preview-04-17') ? 'gemini-2.5-flash' : S.geminiModel;
+  S.geminiModel = (S.geminiModel === 'gemini-2.5-pro-preview-03-25') ? 'gemini-2.5-pro' : S.geminiModel;
+  if (!GEMINI_MODELS.some(m => m.id === S.geminiModel)) S.geminiModel = DEFAULTS.geminiModel;
   // Load API key from sessionStorage
   S.geminiKey = sessionStorage.getItem('wx_gemini_key') || '';
 }
 
 // ─── GEMINI MODELS ───────────────────────────────────────
 const GEMINI_MODELS = [
-  { id:'gemini-2.5-flash-preview-04-17', label:'Gemini 2.5 Flash ✦', thinking:true },
-  { id:'gemini-2.5-pro-preview-03-25',   label:'Gemini 2.5 Pro ✦',   thinking:true },
+  { id:'gemini-2.5-flash',               label:'Gemini 2.5 Flash',    thinking:true },
+  { id:'gemini-2.5-pro',                 label:'Gemini 2.5 Pro',      thinking:true },
   { id:'gemini-2.0-flash',               label:'Gemini 2.0 Flash',    thinking:false },
+  { id:'gemini-2.0-flash-lite',          label:'Gemini 2.0 Flash Lite',thinking:false },
   { id:'gemini-1.5-flash',               label:'Gemini 1.5 Flash',    thinking:false },
-  { id:'gemini-1.5-pro',                 label:'Gemini 1.5 Pro',      thinking:false },
 ];
 
 // ─── AGENTS ──────────────────────────────────────────────
 const AGENTS = [
   { id:'REX',  name:'REX',  role:'Security',    color:'#ff4d4d', model:'gemini-2.0-flash',               thinking:false, desc:'Security auditing, threat detection, vulnerability analysis.' },
-  { id:'ARIA', name:'ARIA', role:'Orchestrator',color:'#a480ff', model:'gemini-2.5-flash-preview-04-17', thinking:true,  desc:'Cross-agent coordination, strategy, decision synthesis.' },
-  { id:'KODE', name:'KODE', role:'Developer',   color:'#00e676', model:'gemini-2.5-flash-preview-04-17', thinking:true,  desc:'Engineering, code generation, architecture.' },
+  { id:'ARIA', name:'ARIA', role:'Orchestrator',color:'#a480ff', model:'gemini-2.5-flash', thinking:true,  desc:'Cross-agent coordination, strategy, decision synthesis.' },
+  { id:'KODE', name:'KODE', role:'Developer',   color:'#00e676', model:'gemini-2.5-flash', thinking:true,  desc:'Engineering, code generation, architecture.' },
   { id:'LUMA', name:'LUMA', role:'Designer',    color:'#ff4081', model:'gemini-2.0-flash',               thinking:false, desc:'UI/UX, design systems, visual engineering.' },
-  { id:'SAGE', name:'SAGE', role:'Analyst',     color:'#00d8ff', model:'gemini-2.5-pro-preview-03-25',   thinking:true,  desc:'Data synthesis, strategic forecasting, metrics.' },
+  { id:'SAGE', name:'SAGE', role:'Analyst',     color:'#00d8ff', model:'gemini-2.5-pro',   thinking:true,  desc:'Data synthesis, strategic forecasting, metrics.' },
   { id:'NOX',  name:'NOX',  role:'Shadow',      color:'#7c4dff', model:'gemini-2.0-flash',               thinking:false, desc:'Background optimization, caching, process tuning.' },
   { id:'SOL',  name:'SOL',  role:'Clarity',     color:'#ffab00', model:'gemini-1.5-flash',               thinking:false, desc:'Documentation, user-centric writing, guides.' },
   { id:'VOX',  name:'VOX',  role:'Voice',       color:'#ff80ab', model:'gemini-1.5-flash',               thinking:false, desc:'NLP, sentiment analysis, localization, Thai support.' },
-  { id:'ZENS', name:'ZENS', role:'Ethics',      color:'#b0bec5', model:'gemini-2.5-pro-preview-03-25',   thinking:true,  desc:'Compliance, ethical AI, balanced decisions.' },
+  { id:'ZENS', name:'ZENS', role:'Ethics',      color:'#b0bec5', model:'gemini-2.5-pro',   thinking:true,  desc:'Compliance, ethical AI, balanced decisions.' },
 ];
 
 // ─── THEMES ──────────────────────────────────────────────
@@ -1210,7 +1213,10 @@ function applyTheme(id) {
 }
 
 // ─── GEMINI API ──────────────────────────────────────────
-const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_API_BASES = [
+  'https://generativelanguage.googleapis.com/v1/models',
+  'https://generativelanguage.googleapis.com/v1beta/models',
+];
 
 function getKey() {
   const k = sessionStorage.getItem('wx_gemini_key') || '';
@@ -1228,14 +1234,20 @@ async function geminiText(prompt, { model, temperature=0.7, maxTokens=8192, thin
     contents:[{ role:'user', parts }],
     generationConfig:{ temperature, maxOutputTokens:maxTokens },
   };
-  if (system) body.system_instruction = { parts:[{ text:system }]};
+  if (system) body.systemInstruction = { parts:[{ text:system }]};
   if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
-  const r = await fetch(`${BASE}/${m}:generateContent?key=${key}`,{
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-  });
-  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
-  const d = await r.json();
-  return d?.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text || '';
+  let lastErr = null;
+  for (const base of GEMINI_API_BASES) {
+    try {
+      const r = await fetch(`${base}/${m}:generateContent?key=${key}`,{
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+      const d = await r.json();
+      return d?.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text || '';
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('Gemini API request failed.');
 }
 
 async function geminiStream(prompt, { model, temperature=0.7, maxTokens=8192, thinkingBudget, system, onChunk, onThinking, onDone, onError } = {}) {
@@ -1246,33 +1258,53 @@ async function geminiStream(prompt, { model, temperature=0.7, maxTokens=8192, th
       contents:[{ role:'user', parts:[{ text:prompt }]}],
       generationConfig:{ temperature, maxOutputTokens:maxTokens },
     };
-    if (system) body.system_instruction = { parts:[{ text:system }]};
+    if (system) body.systemInstruction = { parts:[{ text:system }]};
     if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
-    const r = await fetch(`${BASE}/${m}:streamGenerateContent?key=${key}&alt=sse`,{
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-    });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
-    const reader = r.body.getReader(), dec = new TextDecoder();
-    let buf='', full='', thinking='';
-    while(true) {
-      const {done,value} = await reader.read();
-      if(done) break;
-      buf += dec.decode(value, {stream:true});
-      const lines = buf.split('\n'); buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]') continue;
-        try {
-          const j = JSON.parse(raw);
-          for (const part of (j?.candidates?.[0]?.content?.parts || [])) {
-            if (part.thought) { thinking += part.text||''; if(onThinking) onThinking(thinking); }
-            else { full += part.text||''; if(onChunk) onChunk(full); }
+    let full='', thinking='', lastErr = null;
+    for (const base of GEMINI_API_BASES) {
+      try {
+        const r = await fetch(`${base}/${m}:streamGenerateContent?key=${key}&alt=sse`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+        const reader = r.body.getReader(), dec = new TextDecoder();
+        let buf='';
+        const processSseEvent = (eventText) => {
+          const payload = eventText
+            .split('\n')
+            .filter(line => line.startsWith('data:'))
+            .map(line => line.replace(/^data:\s?/, ''))
+            .join('\n')
+            .trim();
+          if (!payload || payload === '[DONE]') return;
+          try {
+            const j = JSON.parse(payload);
+            const parts = Array.isArray(j?.candidates?.[0]?.content?.parts) ? j.candidates[0].content.parts : [];
+            for (const part of parts) {
+              if (part?.thought) { thinking += part?.text || ''; if(onThinking) onThinking(thinking); }
+              else { full += part?.text || ''; if(onChunk) onChunk(full); }
+            }
+          } catch(e){}
+        };
+        while(true) {
+          const {done,value} = await reader.read();
+          if(done) {
+            if (buf.trim()) processSseEvent(buf.trim());
+            break;
           }
-        } catch(e){}
+          buf += dec.decode(value, {stream:true});
+          const events = buf.split('\n\n');
+          buf = events.pop() || '';
+          for (const eventText of events) {
+            processSseEvent(eventText);
+          }
+        }
+        if(onDone) onDone(full, thinking);
+        return;
       }
+      catch (e) { lastErr = e; }
     }
-    if(onDone) onDone(full, thinking);
+    throw lastErr || new Error('Gemini stream failed.');
   } catch(e) { if(onError) onError(e); else throw e; }
 }
 
@@ -1573,7 +1605,7 @@ const VP_STAGES = [
   { id:'tokens',    label:'Tokens',     prompt: ctx => `Extract design tokens from this UI.\n${ctx}\n\nReturn ONLY JSON: {"colors":{"primary":"hex","background":"hex","surface":"hex","text":"hex","accent":"hex"},"typography":{"heading":"","body":"","mono":""},"spacing":"desc","borderRadius":"pattern","shadows":"desc"}` },
   { id:'patterns',  label:'Patterns',   prompt: ctx => `Identify React component patterns for this UI.\n${ctx}\n\nReturn ONLY JSON: {"components":["Name"],"stateManagement":"zustand","routing":"pattern","dataFetching":"fetch","animationLib":"framer-motion","specialPatterns":["pattern"]}` },
   { id:'codegen',   label:'Code Gen',   prompt: ctx => `Generate a complete React/TypeScript/Tailwind component for this UI.\n${ctx}\n\nReturn ONLY production-ready TSX. No explanation. Full implementations.` },
-  { id:'rules',     label:'Lockspec',   prompt: ctx => `Generate lockspec constraints for this UI as a Next.js 14 app.\n${ctx}\n\nReturn ONLY JSON: {"stack":"Next.js 14, TypeScript, Tailwind CSS 3","constraints":["rule"],"modules":["module"],"geminiModel":"gemini-2.0-flash"}` },
+  { id:'rules',     label:'Lockspec',   prompt: ctx => `Generate lockspec constraints for this UI as a Next.js 14 app.\n${ctx}\n\nReturn ONLY JSON: {"stack":"Next.js 14, TypeScript, Tailwind CSS 3","constraints":["rule"],"modules":["module"],"geminiModel":"gemini-2.5-flash"}` },
   { id:'refine',    label:'Refine',     prompt: ctx => `Review and improve the generated code for this UI.\n${ctx}\n\nList: 1) Accessibility 2) Performance 3) Edge cases 4) Responsive 5) TypeScript improvements. Be specific.` },
   { id:'export',    label:'Export',     prompt: ctx => `Summarize the full build spec for this UI.\n${ctx}\n\nReturn a structured PS1 comment block with: project name, stack, modules, key constraints.` },
 ];
@@ -1735,7 +1767,7 @@ function bsNewLockspec() {
     id:uid(), name:'My Project', version:'1.0.0',
     stack:'Next.js 14, TypeScript strict, Tailwind CSS 3, Gemini AI',
     objective:'', modules:[''], constraints:['sessionStorage for API key','Zero placeholders'],
-    geminiModel:'gemini-2.0-flash', thinkingEnabled:false, createdAt:now()
+    geminiModel:'gemini-2.5-flash', thinkingEnabled:false, createdAt:now()
   };
   S.lockspecs.unshift(ls);
   S.activeLockspecId = ls.id;
@@ -2318,7 +2350,8 @@ function wbInit() {
     btn.onclick = () => { wbTool=t.id; document.querySelectorAll('[id^="wbt-"]').forEach(b=>b.style.borderColor=''); btn.style.borderColor='var(--acc)'; };
     toolsEl.appendChild(btn);
   });
-  $('wbt-pen').style.borderColor='var(--acc)';
+  const defaultToolBtn = $('wbt-pen');
+  if (defaultToolBtn) defaultToolBtn.style.borderColor='var(--acc)';
 
   // Build colors UI
   const colorsEl = $('wbColors');
@@ -2816,11 +2849,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Restore chat messages
   const msgs = $('chatMessages');
-  if (S.messages.length) {
+  if (msgs && S.messages.length) {
     msgs.innerHTML='';
     S.messages.forEach(m => msgs.appendChild(gtBuildMsgEl(m.role, m.content, m.agentId, m.thinking)));
     msgs.scrollTop = msgs.scrollHeight;
-    $('gt-msgcount').textContent = `${S.messages.length} messages`;
+    const msgCount = $('gt-msgcount');
+    if (msgCount) msgCount.textContent = `${S.messages.length} messages`;
   }
 
   updateKeyStatus();
@@ -2846,9 +2880,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      $('keyModal').classList.add('hidden');
-      $('taskModal').classList.add('hidden');
-      $('galleryModal').classList.add('hidden');
+      $('keyModal')?.classList.add('hidden');
+      $('taskModal')?.classList.add('hidden');
+      $('galleryModal')?.classList.add('hidden');
     }
   });
 
@@ -2866,3 +2900,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('%c15 modules · 9 agents · Gemini AI', 'color:#7c4dff;font-size:11px');
 });
 </script>
+
+</body>
+</html>

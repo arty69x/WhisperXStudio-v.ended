@@ -1210,7 +1210,10 @@ function applyTheme(id) {
 }
 
 // ─── GEMINI API ──────────────────────────────────────────
-const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_API_BASES = [
+  'https://generativelanguage.googleapis.com/v1/models',
+  'https://generativelanguage.googleapis.com/v1beta/models',
+];
 
 function getKey() {
   const k = sessionStorage.getItem('wx_gemini_key') || '';
@@ -1228,34 +1231,60 @@ async function geminiText(prompt, { model, temperature=0.7, maxTokens=8192, thin
     contents:[{ role:'user', parts }],
     generationConfig:{ temperature, maxOutputTokens:maxTokens },
   };
-  if (system) body.system_instruction = { parts:[{ text:system }]};
-  if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
-  const r = await fetch(`${BASE}/${m}:generateContent?key=${key}`,{
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-  });
-  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
-  const d = await r.json();
-  return d?.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text || '';
-}
-
-async function geminiStream(prompt, { model, temperature=0.7, maxTokens=8192, thinkingBudget, system, onChunk, onThinking, onDone, onError } = {}) {
-  try {
-    const key = getKey();
-    const m = model || S.geminiModel;
-    const body = {
-      contents:[{ role:'user', parts:[{ text:prompt }]}],
-      generationConfig:{ temperature, maxOutputTokens:maxTokens },
-    };
-    if (system) body.system_instruction = { parts:[{ text:system }]};
-    if (thinkingBudget > 0) body.generationConfig.thinkingConfig = { thinkingBudget };
-    const r = await fetch(`${BASE}/${m}:streamGenerateContent?key=${key}&alt=sse`,{
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-    });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
-    const reader = r.body.getReader(), dec = new TextDecoder();
-    let buf='', full='', thinking='';
-    while(true) {
-      const {done,value} = await reader.read();
+  let lastErr = null;
+  for (const base of GEMINI_API_BASES) {
+    try {
+      const r = await fetch(`${base}/${m}:generateContent?key=${key}`,{
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+      const d = await r.json();
+      return d?.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text || '';
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('Gemini API request failed.');
+    let full='', thinking='', lastErr = null;
+    for (const base of GEMINI_API_BASES) {
+      try {
+        const r = await fetch(`${base}/${m}:streamGenerateContent?key=${key}&alt=sse`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+        const reader = r.body.getReader(), dec = new TextDecoder();
+        let buf='';
+        const processSseEvent = (eventText) => {
+          const payload = eventText
+            .split('\n')
+            .filter(line => line.startsWith('data:'))
+            .map(line => line.replace(/^data:\s?/, ''))
+            .join('\n')
+            .trim();
+          if (!payload || payload === '[DONE]') return;
+          try {
+            const j = JSON.parse(payload);
+            const parts = Array.isArray(j?.candidates?.[0]?.content?.parts) ? j.candidates[0].content.parts : [];
+            for (const part of parts) {
+              if (part?.thought) { thinking += part?.text || ''; if(onThinking) onThinking(thinking); }
+              else { full += part?.text || ''; if(onChunk) onChunk(full); }
+            }
+          } catch(e){}
+        };
+        while(true) {
+          const {done,value} = await reader.read();
+          if(done) {
+            if (buf.trim()) processSseEvent(buf.trim());
+            break;
+          }
+          buf += dec.decode(value, {stream:true});
+          const events = buf.split('\n\n');
+          buf = events.pop() || '';
+          for (const eventText of events) {
+            processSseEvent(eventText);
+        }
+        if(onDone) onDone(full, thinking);
+        return;
+      catch (e) { lastErr = e; }
+    throw lastErr || new Error('Gemini stream failed.');
       if(done) break;
       buf += dec.decode(value, {stream:true});
       const lines = buf.split('\n'); buf = lines.pop();
@@ -2318,7 +2347,8 @@ function wbInit() {
     btn.onclick = () => { wbTool=t.id; document.querySelectorAll('[id^="wbt-"]').forEach(b=>b.style.borderColor=''); btn.style.borderColor='var(--acc)'; };
     toolsEl.appendChild(btn);
   });
-  $('wbt-pen').style.borderColor='var(--acc)';
+  const defaultToolBtn = $('wbt-pen');
+  if (defaultToolBtn) defaultToolBtn.style.borderColor='var(--acc)';
 
   // Build colors UI
   const colorsEl = $('wbColors');
@@ -2816,11 +2846,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Restore chat messages
   const msgs = $('chatMessages');
-  if (S.messages.length) {
+  if (msgs && S.messages.length) {
     msgs.innerHTML='';
     S.messages.forEach(m => msgs.appendChild(gtBuildMsgEl(m.role, m.content, m.agentId, m.thinking)));
     msgs.scrollTop = msgs.scrollHeight;
-    $('gt-msgcount').textContent = `${S.messages.length} messages`;
+    const msgCount = $('gt-msgcount');
+    if (msgCount) msgCount.textContent = `${S.messages.length} messages`;
   }
 
   updateKeyStatus();
@@ -2846,9 +2877,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      $('keyModal').classList.add('hidden');
-      $('taskModal').classList.add('hidden');
-      $('galleryModal').classList.add('hidden');
+      $('keyModal')?.classList.add('hidden');
+      $('taskModal')?.classList.add('hidden');
+      $('galleryModal')?.classList.add('hidden');
     }
   });
 
@@ -2866,3 +2897,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('%c15 modules · 9 agents · Gemini AI', 'color:#7c4dff;font-size:11px');
 });
 </script>
+
+</body>
+</html>

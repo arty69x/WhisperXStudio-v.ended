@@ -75,24 +75,7 @@ export default function App() {
     setStatus('processing');
     try {
       const result = await runPipeline(intent);
-      const endpointLogs: string[] = [];
-      for (const provider of ['gemini', 'claude'] as const) {
-        try {
-          const key = apiKeys[provider]?.trim();
-          if (!key) {
-            endpointLogs.push(`${provider.toUpperCase()}: missing API key in local storage`);
-            continue;
-          }
-          const response = await fetch(`/api/v1/${provider}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-            body: JSON.stringify({ intent }),
-          });
-          endpointLogs.push(`${provider.toUpperCase()}: ${response.ok ? 'connected' : `failed (${response.status})`}`);
-        } catch {
-          endpointLogs.push(`${provider.toUpperCase()}: endpoint unreachable`);
-        }
-      }
-      setLogs([...Object.entries(result).map(([k, v]) => `${k}: ${v}`), ...endpointLogs]);
+      setLogs(Object.entries(result).map(([k, v]) => `${k}: ${v}`));
       setStatus('success');
     } catch {
       setStatus('error');
@@ -137,7 +120,7 @@ export default function App() {
           <div className="glass p-4 space-y-3">
             <h2>Ghost Team 9</h2>
             <textarea className="w-full bg-black/30 p-2 rounded min-h-24" value={intent} onChange={(e)=>setIntent(e.target.value)} />
-            <motion.button type="button" whileTap={{scale:0.98}} transition={{type:'spring', stiffness:300, damping:30, duration:0.4}} className="bg-nexus-orange text-black px-4 py-2 rounded cursor-pointer active:scale-95" onClick={() => { void run(); }}>▶ Play Orchestration</motion.button>
+            <motion.button whileTap={{scale:0.98}} transition={{type:'spring', stiffness:300, damping:30, duration:0.4}} className="bg-nexus-orange text-black px-4 py-2 rounded" onClick={run}>Run Orchestration</motion.button>
           </div>
         </div>
 

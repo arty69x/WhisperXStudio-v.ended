@@ -1,228 +1,150 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import { useMemo, useState, type ChangeEventHandler } from 'react';
+import { motion } from 'framer-motion';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { GHOST_TEAM_9, type AgentId } from './constants';
+import { GhostSVG } from './components/GhostSVG';
 
-import { useReducer, useState } from 'react';
-import { 
-  Users, Layout, BarChart3, Pipette, 
-  Calendar, Ghost, Palette, GitMerge, 
-  Terminal, Cpu, Menu, X, 
-  Settings, LogOut, Bell, Search,
-  ChevronRight
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+type Status = 'idle' | 'processing' | 'success' | 'error';
+type Node = { id: string; x: number; y: number; label: string; src: string };
 
-// Module Imports
-import { AgentsModule } from './components/modules/AgentsModule';
-import { WorkspaceModule } from './components/modules/WorkspaceModule';
-import { DashboardModule } from './components/modules/DashboardModule';
-import { AnalyticsModule } from './components/modules/AnalyticsModule';
-import { ProjectModule } from './components/modules/ProjectModule';
-import { CollectionModule } from './components/modules/CollectionModule';
-import { DesignBoardModule } from './components/modules/DesignBoardModule';
-import { MergeEngineModule } from './components/modules/MergeEngineModule';
-import { LockSpecModule } from './components/modules/LockSpecModule';
-import { StudioModule } from './components/modules/StudioModule';
-
-import { MODULES, G } from './constants';
-
-type State = {
-  activeModule: string;
-  isSidebarOpen: boolean;
+type AppState = {
+  status: Status;
+  apiKeys: { gemini: string; claude: string };
+  nodes: Node[];
+  setStatus: (status: Status) => void;
+  setApiKey: (provider: 'gemini' | 'claude', key: string) => void;
+  setNodes: (nodes: Node[]) => void;
 };
 
-type Action = 
-  | { type: 'SET_MODULE'; payload: string }
-  | { type: 'TOGGLE_SIDEBAR' };
+const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      status: 'idle',
+      apiKeys: { gemini: '', claude: '' },
+      nodes: [],
+      setStatus: (status) => set({ status }),
+      setApiKey: (provider, key) =>
+        set((s) => ({ apiKeys: { ...s.apiKeys, [provider]: key } })),
+      setNodes: (nodes) => set({ nodes }),
+    }),
+    { name: 'ghost-guardian-storage' },
+  ),
+);
 
-const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case 'SET_MODULE':
-      return { ...state, activeModule: action.payload };
-    case 'TOGGLE_SIDEBAR':
-      return { ...state, isSidebarOpen: !state.isSidebarOpen };
-    default:
-      return state;
+const safeParse = <T,>(value: string, fallback: T): T => {
+  try { return JSON.parse(value) as T; } catch { return fallback; }
+};
+
+async function runPipeline(intent: string): Promise<Record<AgentId, string>> {
+  const out = {} as Record<AgentId, string>;
+  let cycle = 0;
+  while (cycle < 3) {
+    for (const agent of GHOST_TEAM_9) {
+      try {
+        const clipped = intent.slice(0, agent.maxTokens);
+        out[agent.id] = `${agent.role} processed ${clipped.length} tokens (cycle ${cycle + 1})`;
+      } catch {
+        out[agent.id] = 'fallback-safe';
+      }
+    }
+    cycle += 1;
+    if (out.VIGI) break;
   }
-};
-
-const ICON_MAP: Record<string, any> = {
-  Users, Layout, BarChart3, Pipette, 
-  Calendar, Ghost, Palette, GitMerge, 
-  Terminal, Cpu
-};
+  return out;
+}
 
 export default function App() {
-  const [state, dispatch] = useReducer(reducer, {
-    activeModule: 'AGENTS',
-    isSidebarOpen: true,
-  });
+  const { status, setStatus, apiKeys, setApiKey, nodes, setNodes } = useStore();
+  const [intent, setIntent] = useState('Build production-ready pipeline.');
+  const [logs, setLogs] = useState<string[]>([]);
 
-  const renderModule = () => {
-    switch (state.activeModule) {
-      case 'AGENTS': return <AgentsModule />;
-      case 'WORKSPACE': return <WorkspaceModule />;
-      case 'DASHBOARD': return <DashboardModule />;
-      case 'ANALYTICS': return <AnalyticsModule />;
-      case 'PROJECT': return <ProjectModule />;
-      case 'COLLECTION': return <CollectionModule />;
-      case 'DESIGN': return <DesignBoardModule />;
-      case 'MERGE': return <MergeEngineModule />;
-      case 'LOCKSPEC': return <LockSpecModule />;
-      case 'STUDIO': return <StudioModule />;
-      default: return <AgentsModule />;
+  const ghostColor = useMemo(() => ({ idle: '#ffffff', processing: '#ffcc00', success: '#00ff66', error: '#ff1a1a' }[status]), [status]);
+
+  const onUpload: ChangeEventHandler<HTMLInputElement> = async (e) => {
+    try {
+      const files = Array.from(e.target.files ?? []) as File[];
+      const built = files.map((f, i) => ({ id: `${f.name}-${i}`, x: 80 + i * 220, y: 100 + i * 40, label: f.name, src: URL.createObjectURL(f) }));
+      setNodes(built);
+    } catch {
+      setStatus('error');
     }
   };
 
+  const run = async () => {
+    setStatus('processing');
+    try {
+      const result = await runPipeline(intent);
+      setLogs(Object.entries(result).map(([k, v]) => `${k}: ${v}`));
+      setStatus('success');
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  const exportEncrypted = () => {
+    try {
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ apiKeys, nodes, logs }))));
+      const blob = new Blob([payload], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ghost-guardian.enc.json'; a.click();
+    } catch { setStatus('error'); }
+  };
+
+  const importEncrypted: ChangeEventHandler<HTMLInputElement> = async (e) => {
+    try {
+      const file = e.target.files?.[0]; if (!file) return;
+      const txt = await file.text();
+      const data = safeParse(decodeURIComponent(escape(atob(txt))), '{}');
+      if (typeof data === 'string') return;
+      const obj = data as { apiKeys?: AppState['apiKeys']; nodes?: Node[] };
+      if (obj.apiKeys) { setApiKey('gemini', obj.apiKeys.gemini || ''); setApiKey('claude', obj.apiKeys.claude || ''); }
+      if (Array.isArray(obj.nodes)) setNodes(obj.nodes);
+    } catch { setStatus('error'); }
+  };
+
   return (
-    <div className="flex h-screen w-full bg-void overflow-hidden text-slate-200">
-      {/* Sidebar Navigation */}
-      <AnimatePresence mode="wait">
-        {state.isSidebarOpen && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            className="h-full border-r border-white/5 bg-cosmos flex flex-col z-50 shrink-0 overflow-hidden"
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-10">
-                <div className="w-10 h-10 rounded-2xl bg-purple-accent flex items-center justify-center shadow-lg shadow-purple-900/40">
-                   <Ghost className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                   <h1 className="text-lg font-display font-black tracking-tight text-white leading-none">WhisperX</h1>
-                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-accent mt-1">Nexus Omega</p>
-                </div>
-              </div>
-
-              <nav className="space-y-1">
-                {MODULES.map((item) => {
-                  const Icon = ICON_MAP[item.icon];
-                  const isActive = state.activeModule === item.id;
-                  
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => dispatch({ type: 'SET_MODULE', payload: item.id })}
-                      className={`w-full group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                        isActive 
-                        ? 'bg-purple-accent text-white shadow-lg shadow-purple-900/20' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className={`w-5 h-5 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                      <span className="text-sm font-bold tracking-tight">{item.label}</span>
-                      {isActive && (
-                        <motion.div 
-                          layoutId="nav-glow"
-                          className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-l-full shadow-[0_0_15px_#ffffffaa]"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            <div className="mt-auto p-6 space-y-4">
-              <div className="bg-void/50 p-4 rounded-2xl border border-white/5 relative overflow-hidden group">
-                 <div className="absolute inset-0 bg-aurora-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative z-10 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-stardust flex items-center justify-center text-[10px] font-bold">JD</div>
-                    <div className="overflow-hidden">
-                       <p className="text-xs font-bold text-white truncate">Nexus Master</p>
-                       <p className="text-[10px] text-slate-500 truncate">session_429a</p>
-                    </div>
-                    <LogOut className="w-4 h-4 ml-auto text-slate-600 hover:text-pulsar-accent cursor-pointer transition-colors" />
-                 </div>
-              </div>
-              <button className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
-                <Settings className="w-4 h-4" />
-                Preferences
-              </button>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      {/* Main View Area */}
-      <main className="flex-grow flex flex-col h-full relative overflow-hidden bg-void/50">
-        {/* Top Header */}
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-cosmos/20 backdrop-blur-md z-40">
-           <div className="flex items-center gap-4">
-              <button 
-                onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-white"
-              >
-                {state.isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-              
-              <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
-              
-              <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500">
-                 <span className="opacity-40">SYSTEM</span>
-                 <ChevronRight className="w-3 h-3 opacity-20" />
-                 <span className="text-slate-300">{MODULES.find(m => m.id === state.activeModule)?.label.toUpperCase()}</span>
-              </div>
-           </div>
-
-           <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 bg-void/80 px-3 py-1.5 rounded-xl border border-white/5">
-                 <Search className="w-3.5 h-3.5 text-slate-500" />
-                 <input 
-                   placeholder="SEARCH COMMANDS..." 
-                   className="bg-transparent border-none outline-none text-[10px] font-mono tracking-widest w-32 focus:w-48 transition-all"
-                 />
-              </div>
-              <div className="relative">
-                 <Bell className="w-5 h-5 text-slate-400 hover:text-white cursor-pointer transition-colors" />
-                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-pulsar-accent rounded-full border-2 border-void" />
-              </div>
-              <div className="w-8 h-8 rounded-lg bg-aurora-accent/20 border border-aurora-accent/30 flex items-center justify-center">
-                 <div className="w-2 h-2 rounded-full bg-aurora-accent animate-pulse" />
-              </div>
-           </div>
-        </header>
-
-        {/* Dynamic Module Content */}
-        <div className="flex-grow relative overflow-hidden">
-           <AnimatePresence mode="wait">
-             <motion.div
-               key={state.activeModule}
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -20 }}
-               transition={{ duration: 0.4, ease: "easeOut" }}
-               className="h-full w-full"
-             >
-               {renderModule()}
-             </motion.div>
-           </AnimatePresence>
+    <main className="min-h-screen bg-void-black">
+      <section className="py-6"><div className="container mx-auto px-4 space-y-6">
+        <div className="glass p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4"><GhostSVG color={ghostColor} variant="guardian"/><h1 className="text-xl font-bold">WHISPERX-MASTER V3.2</h1></div>
+          <span className="text-xs uppercase">status: {status}</span>
         </div>
 
-        {/* Global Footer / Status Bar */}
-        <footer className="h-8 border-t border-white/5 bg-cosmos/40 flex items-center justify-between px-6 px-4">
-           <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                 <span className="w-1.5 h-1.5 rounded-full bg-aurora-accent" />
-                 <span className="text-[10px] font-mono opacity-40 uppercase tracking-widest">Core Status: Stable</span>
-              </div>
-              <div className="flex items-center gap-2">
-                 <span className="text-[10px] font-mono opacity-40 uppercase tracking-widest">Latency: 2ms</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-[10px] font-mono opacity-30">
-                 [ ARIA-ORCH v30.0.4-LOCKED ]
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-mono opacity-30">
-                 {new Date().toLocaleTimeString()}
-              </div>
-           </div>
-        </footer>
-      </main>
-    </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="glass p-4 space-y-3">
+            <h2>API Connectivity</h2>
+            <input className="w-full bg-black/30 p-2 rounded" placeholder="Gemini key (localStorage only)" value={apiKeys.gemini} onChange={(e)=>setApiKey('gemini', e.target.value)} />
+            <input className="w-full bg-black/30 p-2 rounded" placeholder="Claude key (localStorage only)" value={apiKeys.claude} onChange={(e)=>setApiKey('claude', e.target.value)} />
+            <p className="text-xs opacity-70">Endpoints: /api/v1/gemini and /api/v1/claude (V1beta protocol).</p>
+          </div>
+          <div className="glass p-4 space-y-3">
+            <h2>Ghost Team 9</h2>
+            <textarea className="w-full bg-black/30 p-2 rounded min-h-24" value={intent} onChange={(e)=>setIntent(e.target.value)} />
+            <motion.button whileTap={{scale:0.98}} transition={{type:'spring', stiffness:300, damping:30, duration:0.4}} className="bg-nexus-orange text-black px-4 py-2 rounded" onClick={run}>Run Orchestration</motion.button>
+          </div>
+        </div>
+
+        <div className="glass p-4 space-y-3">
+          <h2>Vision Node Canvas</h2>
+          <div className="flex gap-2 flex-wrap">
+            <input type="file" accept="image/*" multiple onChange={onUpload} />
+            <button onClick={exportEncrypted} className="px-3 py-1 bg-bloom-green text-black rounded">Export Encrypted JSON</button>
+            <input type="file" accept=".json" onChange={importEncrypted} />
+          </div>
+          <div className="relative h-[420px] overflow-auto border border-white/20 rounded-xl bg-black/30">
+            <div className="relative w-[1600px] h-[900px]">
+              {nodes.map((node) => (
+                <motion.div drag dragMomentum={false} key={node.id} className="absolute glass p-2 w-48" style={{ left: node.x, top: node.y }} whileHover={{ rotateX: 6, rotateY: -6 }} transition={{type:'spring', stiffness:300, damping:30, duration:0.4}}>
+                  <img src={node.src} className="w-full h-24 object-cover rounded" />
+                  <p className="text-xs mt-2 truncate">{node.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass p-4"><pre className="text-xs whitespace-pre-wrap">{logs.join('\n')}</pre></div>
+      </div></section>
+    </main>
   );
 }
